@@ -25,6 +25,7 @@ const cloudProviderConfigTemplate = `
 [Global]
 project-id=%q
 network-name=%q
+subnetwork-name=%q
 multizone=true
 local-zone=%q
 token-url=nil
@@ -39,11 +40,13 @@ func (b *GCPBotanist) GenerateCloudProviderConfig() (string, error) {
 	if networkName == "" {
 		networkName = b.Shoot.SeedNamespace
 	}
+	subNetworkName := networkName + "-internal"
 
 	return fmt.Sprintf(
 		cloudProviderConfigTemplate,
 		b.Project,
 		networkName,
+		subNetworkName,
 		b.Shoot.Info.Spec.Cloud.GCP.Zones[0],
 		b.Shoot.SeedNamespace,
 	), nil

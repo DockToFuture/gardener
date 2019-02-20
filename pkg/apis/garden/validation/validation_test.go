@@ -1538,7 +1538,6 @@ var _ = Describe("validation", func() {
 					}))
 				})
 
-
 				It("should forbid empty machine image id", func() {
 					alicloudProfile.Spec.Alicloud.Constraints.MachineImages[0].ID = ""
 
