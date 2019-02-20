@@ -2983,7 +2983,7 @@ func schema_pkg_apis_garden_v1beta1_GCPMachineImage(ref common.ReferenceCallback
 					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Image is the technical name of the image. It contains the image name and the Google Cloud project. Example: projects/coreos-cloud/global/images/coreos-stable-1576-5-0-v20180105",
+							Description: "Image is the technical name of the image. It contains the image name and the Google Cloud project. Example: projects/<name>/global/images/version23",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -3032,6 +3032,20 @@ func schema_pkg_apis_garden_v1beta1_GCPNetworks(ref common.ReferenceCallback) co
 					"workers": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Workers is a list of CIDRs of worker subnets (private) to create (used for the VMs).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"internal": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Internal is a private subnet (used for internal load balancers).",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{

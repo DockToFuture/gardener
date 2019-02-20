@@ -25,6 +25,7 @@ const cloudProviderConfigTemplate = `
 [Global]
 project-id=%q
 network-name=%q
+%v
 multizone=true
 local-zone=%q
 token-url=nil
@@ -40,10 +41,23 @@ func (b *GCPBotanist) GenerateCloudProviderConfig() (string, error) {
 		networkName = b.Shoot.SeedNamespace
 	}
 
+	var (
+		subnetID       = "subnet_internal"
+		subNetworkName = ""
+	)
+	tf, err := b.NewShootTerraformer(common.TerraformerPurposeInfra)
+	if err != nil {
+		return "", err
+	}
+	stateVariables, err := tf.GetStateOutputVariables(subnetID)
+	if err == nil {
+		subNetworkName = "subnetwork-name=" + "\"" + stateVariables[subnetID] + "\""
+	}
 	return fmt.Sprintf(
 		cloudProviderConfigTemplate,
 		b.Project,
 		networkName,
+		subNetworkName,
 		b.Shoot.Info.Spec.Cloud.GCP.Zones[0],
 		b.Shoot.SeedNamespace,
 	), nil

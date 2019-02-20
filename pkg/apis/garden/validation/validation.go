@@ -1249,6 +1249,16 @@ func validateCloud(cloud garden.Cloud, fldPath *field.Path) field.ErrorList {
 		if len(gcp.Networks.Workers) != zoneCount {
 			allErrs = append(allErrs, field.Invalid(gcpPath.Child("networks", "workers"), gcp.Networks.Workers, "must specify as many workers networks as zones"))
 		}
+
+		internalCIDR := make([]cidrvalidation.CIDR, 0, len(gcp.Networks.Internal))
+		for i, cidr := range gcp.Networks.Internal {
+			internalCIDR = append(internalCIDR, cidrvalidation.NewCIDR(cidr, gcpPath.Child("networks", "internal").Index(i)))
+		}
+
+		if len(internalCIDR) > 1 {
+			allErrs = append(allErrs, field.Forbidden(gcpPath.Child("networks", "internal"), "must specify only one cidr range for internal loadbalancer"))
+		}
+
 		workerCIDRs := make([]cidrvalidation.CIDR, 0, len(gcp.Networks.Workers))
 		for i, cidr := range gcp.Networks.Workers {
 			workerCIDRs = append(workerCIDRs, cidrvalidation.NewCIDR(cidr, gcpPath.Child("networks", "workers").Index(i)))
@@ -1256,9 +1266,12 @@ func validateCloud(cloud garden.Cloud, fldPath *field.Path) field.ErrorList {
 
 		allErrs = append(allErrs, validateCIDRParse(workerCIDRs...)...)
 		allErrs = append(allErrs, validateCIDROVerlap(workerCIDRs, workerCIDRs, false)...)
+		allErrs = append(allErrs, validateCIDRParse(internalCIDR...)...)
 
 		allErrs = append(allErrs, validateCIDROVerlap([]cidrvalidation.CIDR{pods, services}, workerCIDRs, false)...)
+		allErrs = append(allErrs, validateCIDROVerlap([]cidrvalidation.CIDR{pods, services}, internalCIDR, false)...)
 		allErrs = append(allErrs, validateCIDROVerlap([]cidrvalidation.CIDR{nodes}, workerCIDRs, true)...)
+		allErrs = append(allErrs, validateCIDROVerlap([]cidrvalidation.CIDR{nodes}, internalCIDR, false)...)
 
 		if gcp.Networks.VPC != nil && len(gcp.Networks.VPC.Name) == 0 {
 			allErrs = append(allErrs, field.Invalid(gcpPath.Child("networks", "vpc", "name"), gcp.Networks.VPC.Name, "vpc name must not be empty when vpc key is provided"))
