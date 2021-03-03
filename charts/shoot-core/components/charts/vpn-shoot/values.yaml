@@ -15,9 +15,9 @@ vpnShootSecretData:
 wireguard:
   enabled: false
   address: 192.168.17.2/24
-  privateKey: <key>
-  peerPublicKey: <key>
-  peerPresharedKey: <key>
+  privateKey: qPFTCzX7QjSheAZ4P16NrbBBsCkg0LDz35nRXg3I0E8=
+  peerPublicKey: xB32JFvLD0CuJxFyF7NrXNAMEODZDg+tPRm6BBpJhVA=
+  peerPresharedKey: sham4BwNNKofto8PCP1YQt81dF7638J93+XgBURrJ34=
   peerAllowedIPs: 192.168.17.1/32
-  peerEndpoint: <host:port>
+  peerEndpoint: 34.22.22.25:19332
   useUDP: "true"
