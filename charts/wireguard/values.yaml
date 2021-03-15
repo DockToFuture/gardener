@@ -1,11 +1,11 @@
 wireguard:
   externalPort: 8777
-  address: 192.168.17.1/24
+  address: 192.168.17.5/24
   privateKey: kHmagrqZr2A7NDvHm/Ddq95c11fyCo33L42uiNfa1Gw=
   internalPort: 10200
   peer1:
-    publicKey: <key>
-    presharedKey: <key>
+    publicKey: Q2tD8DQY7f6hk5oxo0BiWCtTeLaJaabjQU7ZRSDaego=
+    presharedKey: sham4BwNNKofto8PCP1YQt81dF7638J93+XgBURrJ34=
     allowedIPs: 192.168.17.2/32
   peer2:
     publicKey: <key>
@@ -15,6 +15,3 @@ wireguard:
     publicKey: <key>
     presharedKey: <key>
     allowedIPs: 192.168.17.4/32
-  peerPublicKey: Q2tD8DQY7f6hk5oxo0BiWCtTeLaJaabjQU7ZRSDaego=
-  peerPresharedKey: sham4BwNNKofto8PCP1YQt81dF7638J93+XgBURrJ34=
-  peerAllowedIPs: 192.168.17.5/32
