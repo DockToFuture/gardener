@@ -43,9 +43,27 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
+{{- if .Values.wireguard.enabled }}
+      initContainers:
+      - name: vpn-shoot-wireguard-init
+        image: eu.gcr.io/gardener-project/test/vpn-shoot-wireguard:0.7
+        command:
+        - bash
+        args:
+        - -c
+        - '/usr/bin/wg-quick up wg0'
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+        volumeMounts:
+        - name: wireguard-config
+          mountPath: /etc/wireguard
+{{- end }}
       containers:
       - name: vpn-shoot
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-dev:0.6 #{{ index .Values.images "vpn-shoot" }}
+        image: eu.gcr.io/gardener-project/test/vpn-shoot-dev:0.7 #{{ index .Values.images "vpn-shoot" }}
         imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE_NETWORK
@@ -85,6 +103,19 @@ spec:
         - mountPath: /srv/secrets/dh
           name: vpn-shoot-dh
 {{- if .Values.wireguard.enabled }}
+      - name: readvertiser
+        image: eu.gcr.io/gardener-project/test/vpn-shoot-wireguard:0.7
+        command:
+        - /readvertiser
+        args:
+        - --wireguard-device=wg0
+        - --refresh-time=60
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+        volumeMounts:
         - mountPath: /etc/wireguard
           name: wireguard-config
 {{- end }}
