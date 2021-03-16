@@ -83,7 +83,9 @@ import (
 	wg "golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
-const wireguardDefaultReservationTime = 1 * time.Minute
+const (
+	wireguardDefaultReservationTime = 1 * time.Minute
+)
 
 var (
 	wireguardMutex        sync.Mutex

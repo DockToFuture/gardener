@@ -45,11 +45,11 @@ const (
 // WireguardSecretConfig contains the specification for a to-be-generated wireguard secret.
 type WireguardSecretConfig struct {
 	Name              string
-	LocalWireguardIP  string
 	RemoteWireguardIP string
 	PeerPublicKey     string
 	RemoteEndpoint    string
 	SeedName          string
+	GetIP             func() (*string, error)
 }
 
 // Wireguard contains the keys for serializing the wireguard credentials
@@ -86,8 +86,12 @@ func (w *WireguardSecretConfig) GenerateInfoData() (infodata.InfoData, error) {
 	if err != nil {
 		return nil, err
 	}
+	localWireguardIP, err := w.GetIP()
+	if err != nil {
+		return nil, err
+	}
 	logger.Logger.Errorf("-------------------GenerateInfoData--------------peerPresharedKEy%s,shootprivatek%s,shootpublickey%s", peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
-	return NewWireguardInfoData(w.LocalWireguardIP, w.RemoteWireguardIP, peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String(), w.PeerPublicKey, w.RemoteEndpoint, w.SeedName), nil
+	return NewWireguardInfoData(*localWireguardIP, w.RemoteWireguardIP, peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String(), w.PeerPublicKey, w.RemoteEndpoint, w.SeedName), nil
 }
 
 // GenerateFromInfoData implements ConfigInteface
@@ -100,8 +104,9 @@ func (w *WireguardSecretConfig) GenerateFromInfoData(infoData infodata.InfoData)
 	peerPresharedKey := data.PeerPresharedKey
 	shootPrivateKey := data.ShootPrivateKey
 	shootPublicKey := data.ShootPublicKey
+	localWireguardIP := data.LocalWireguardIP
 
-	return w.generateWithKeys(peerPresharedKey, shootPrivateKey, shootPublicKey)
+	return w.generateWithKeys(localWireguardIP, peerPresharedKey, shootPrivateKey, shootPublicKey)
 }
 
 // LoadFromSecretData implements infodata.Loader
@@ -130,15 +135,19 @@ func (w *WireguardSecretConfig) GenerateWireguard() (*Wireguard, error) {
 	if err != nil {
 		return nil, err
 	}
+	localWireguardIP, err := w.GetIP()
+	if err != nil {
+		return nil, err
+	}
 	logger.Logger.Errorf("-------------------GenerateWireguard--------------peerPresharedKEy%s,shootprivatek%s,shootpublickey%s", peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
-	return w.generateWithKeys(peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
+	return w.generateWithKeys(*localWireguardIP, peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
 }
 
 // generateWithKeys returns a Wireguard secret DataInterface with the given keys.
-func (w *WireguardSecretConfig) generateWithKeys(peerPresharedKey, shootPrivateKey, shootPublicKey string) (*Wireguard, error) {
+func (w *WireguardSecretConfig) generateWithKeys(localWireguardIP, peerPresharedKey, shootPrivateKey, shootPublicKey string) (*Wireguard, error) {
 	wireguard := &Wireguard{
 		Name:              w.Name,
-		LocalWireguardIP:  w.LocalWireguardIP,
+		LocalWireguardIP:  localWireguardIP,
 		RemoteWireguardIP: w.RemoteWireguardIP,
 		PeerPublicKey:     w.PeerPublicKey,
 		PeerPresharedKey:  peerPresharedKey,

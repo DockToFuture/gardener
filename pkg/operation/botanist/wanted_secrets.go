@@ -725,22 +725,8 @@ func (b *Botanist) generateWantedSecretConfigs(basicAuthAPIServer *secrets.Basic
 	}
 
 	if b.Shoot.WireguardTunnelEnabled {
-		ip := ""
-		var err error
-		if b.Secrets[common.WireguardSecretName] != nil && b.Secrets[common.WireguardSecretName].Data["localWireguardIP"] != nil {
-			ip = string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"])
-		} else {
-			ipamManager, err := seed.GetOrCreate(b.Seed, b.K8sGardenClient)
-			if err != nil {
-				return nil, err
-			}
-			ip, err = ipamManager.AcquireIP()
-			if err != nil {
-				return nil, err
-			}
-		}
 		wireguardService := &corev1.Service{}
-		err = b.K8sSeedClient.Client().Get(context.TODO(), client.ObjectKey{Namespace: "wireguard", Name: "wireguard-vpn"}, wireguardService)
+		err := b.K8sSeedClient.Client().Get(context.TODO(), client.ObjectKey{Namespace: "wireguard", Name: "wireguard-vpn"}, wireguardService)
 		if err != nil {
 			return nil, err
 		}
@@ -752,11 +738,21 @@ func (b *Botanist) generateWantedSecretConfigs(basicAuthAPIServer *secrets.Basic
 		}
 		secretList = append(secretList, &secrets.WireguardSecretConfig{
 			Name:              common.WireguardSecretName,
-			LocalWireguardIP:  ip,
 			RemoteWireguardIP: *b.Seed.Info.Status.WireguardIP,
 			RemoteEndpoint:    fmt.Sprintf("%s:%d", hostAddress, wireguardService.Spec.Ports[0].Port),
 			PeerPublicKey:     *b.Seed.Info.Status.WireguardPublicKey,
 			SeedName:          *b.Shoot.Info.Spec.SeedName,
+			GetIP: func() (*string, error) {
+				ipamManager, err := seed.GetOrCreate(b.Seed, b.K8sGardenClient)
+				if err != nil {
+					return nil, err
+				}
+				ip, err := ipamManager.AcquireIP()
+				if err != nil {
+					return nil, err
+				}
+				return &ip, nil
+			},
 		})
 		b.Logger.Errorf("SHOOTNAME:----------------%s\nSeedNAME:----------------%s\nSECRETLIST:----------------%+v\n", b.Shoot.Info.Name, b.Seed.Info.Name, secretList[len(secretList)-1])
 	}
