@@ -36,8 +36,17 @@ type IntermediateValues struct {
 }
 
 type WireguardValues struct {
-	Address    string `json:"address,omitempty"`
-	PrivateKey string `json:"privateKey,omitempty"`
+	Address    string    `json:"address,omitempty"`
+	PrivateKey string    `json:"privateKey,omitempty"`
+	Peer1      *PeerInfo `json:"peer1,omitempty"`
+	Peer2      *PeerInfo `json:"peer2,omitempty"`
+	Peer3      *PeerInfo `json:"peer3,omitempty"`
+}
+
+type PeerInfo struct {
+	PublicKey    string `json:"publicKey,omitempty"`
+	PresharedKey string `json:"presharedKey,omitempty"`
+	AllowedIPs   string `json:"allowedIPs,omitempty"`
 }
 
 // NewWireguard creates a new DeployWaiter for wireguard.

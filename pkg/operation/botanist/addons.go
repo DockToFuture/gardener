@@ -472,15 +472,16 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 				return nil, err
 			}
 			vpnShootConfig["wireguard"] = map[string]interface{}{
-				"address":          fmt.Sprintf("%s/%s", b.Secrets[common.WireguardSecretName].Data["localWireguardIP"], wireguardCIDRPostfix),
+				"address":          fmt.Sprintf("%s/%s", string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]), wireguardCIDRPostfix),
 				"enabled":          fmt.Sprintf("%t", b.Shoot.WireguardTunnelEnabled),
-				"privateKey":       b.Secrets[common.WireguardSecretName].Data["privateKey"],
-				"peerPublicKey":    b.Secrets[common.WireguardSecretName].Data["peerPublicKey"],
-				"peerPresharedKey": b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"],
+				"privateKey":       string(b.Secrets[common.WireguardSecretName].Data["privateKey"]),
+				"peerPublicKey":    string(b.Secrets[common.WireguardSecretName].Data["peerPublicKey"]),
+				"peerPresharedKey": string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]),
 				"peerAllowedIPs":   fmt.Sprintf("%s/32", b.Secrets[common.WireguardSecretName].Data["remoteWireguardIP"]),
 				"peerEndpoint":     string(b.Secrets[common.WireguardSecretName].Data["remoteEndpoint"]),
 			}
 		}
+		b.Logger.Errorf("ADDONSSHOOTNAME:----------------%s\nSeedNAME:----------------%s\n----------------privateKey %s, pk %s, presharedkey %s, ipaddress %s\n", b.Shoot.Info.Name, b.Seed.Info.Name, string(b.Secrets[common.WireguardSecretName].Data["privateKey"]), string(b.Secrets[common.WireguardSecretName].Data["peerPublicKey"]), string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]), string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]))
 
 		vpnShoot, err := b.InjectShootShootImages(vpnShootConfig, common.VPNShootImageName)
 		if err != nil {

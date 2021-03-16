@@ -27,6 +27,8 @@ import (
 
 	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
+	"github.com/gardener/gardener/pkg/utils/infodata"
+	"github.com/gardener/gardener/pkg/utils/secrets"
 )
 
 // Acquire the next free IP address in the configured CIDR range respecting already reserved, but not used IPs
@@ -162,12 +164,20 @@ func (p *WireguardShootAddressProvider) Addresses() ([]string, error) {
 		return nil, err
 	}
 	result := make([]string, 0)
-	for _, shoot := range shootStates.Items {
-		for _, resourceData := range shoot.Spec.Gardener {
-			if resourceData.Name == common.WireguardSecretName {
-				//resourceData.Data.Object.()
-				// TODO: Check seed name and add IP
-			}
+	for _, shootstate := range shootStates.Items {
+		infoData, err := infodata.GetInfoData(shootstate.Spec.Gardener, common.WireguardSecretName)
+		if err != nil {
+			return nil, err
+		}
+		if infoData == nil {
+			continue
+		}
+		wireguardInfoData, ok := infoData.(*secrets.WireguardInfoData)
+		if !ok {
+			return nil, fmt.Errorf("could not convert GardenerResourceData entry %s to wireguardInfoData", common.WireguardSecretName)
+		}
+		if wireguardInfoData.SeedName == *p.SeedName {
+			result = append(result, wireguardInfoData.LocalWireguardIP)
 		}
 	}
 	return result, nil

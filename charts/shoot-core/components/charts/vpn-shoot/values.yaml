@@ -14,7 +14,7 @@ vpnShootSecretData:
   tlsKey: ZHVtbXktYjY0LWRhdGE=
 wireguard:
   enabled: false
-  address: 192.168.17.2/24
+  address: 192.168.17.222/8
   privateKey: qPFTCzX7QjSheAZ4P16NrbBBsCkg0LDz35nRXg3I0E8=
   peerPublicKey: xB32JFvLD0CuJxFyF7NrXNAMEODZDg+tPRm6BBpJhVA=
   peerPresharedKey: sham4BwNNKofto8PCP1YQt81dF7638J93+XgBURrJ34=

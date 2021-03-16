@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardencorelisters "github.com/gardener/gardener/pkg/client/core/listers/core/v1beta1"
@@ -50,6 +51,7 @@ import (
 	"github.com/gardener/gardener/pkg/utils"
 	"github.com/gardener/gardener/pkg/utils/flow"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
+	"github.com/gardener/gardener/pkg/utils/infodata"
 	"github.com/gardener/gardener/pkg/utils/ipam"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	secretsutils "github.com/gardener/gardener/pkg/utils/secrets"
@@ -739,10 +741,58 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 				return err
 			}
 		}
+
+		shootStates := &gardencorev1alpha1.ShootStateList{}
+		if err := k8sGardenClient.Client().List(context.TODO(), shootStates); err != nil {
+			fmt.Printf("Error getting shootstate: %s\n", err.Error())
+			return err
+		}
+		wgInfoDataArray := make([]secretsutils.WireguardInfoData, 0)
+		for _, shootstate := range shootStates.Items {
+			infoData, err := infodata.GetInfoData(shootstate.Spec.Gardener, common.WireguardSecretName)
+			if err != nil {
+				return err
+			}
+			if infoData == nil {
+				continue
+			}
+			wireguardInfoData, ok := infoData.(*secretsutils.WireguardInfoData)
+			if !ok {
+				return fmt.Errorf("could not convert GardenerResourceData entry %s to wireguardInfoData", common.WireguardSecretName)
+			}
+			if wireguardInfoData.SeedName == seed.Info.Name {
+				wgInfoDataArray = append(wgInfoDataArray, *wireguardInfoData)
+			}
+		}
+		dummyInfo := secretsutils.WireguardInfoData{
+			ShootPublicKey:   *seed.Info.Status.WireguardPublicKey,
+			PeerPresharedKey: *seed.Info.Status.WireguardPublicKey,
+			LocalWireguardIP: "192.168.17.200",
+		}
+
+		for i := len(wgInfoDataArray); i < 3; i++ {
+			wgInfoDataArray = append(wgInfoDataArray, dummyInfo)
+		}
 		val.Wireguard = &wireguard.WireguardValues{
 			Address:    fmt.Sprintf("%s/%s", *seed.Info.Status.WireguardIP, strings.Split(seed.Info.Spec.Settings.Wireguard.CIDR, "/")[1]),
 			PrivateKey: *seed.Info.Status.WireguardPrivateKey,
+			Peer1: &wireguard.PeerInfo{
+				PublicKey:    wgInfoDataArray[0].ShootPublicKey,
+				PresharedKey: wgInfoDataArray[0].PeerPresharedKey,
+				AllowedIPs:   fmt.Sprintf("%s/32", wgInfoDataArray[0].LocalWireguardIP),
+			},
+			Peer2: &wireguard.PeerInfo{
+				PublicKey:    wgInfoDataArray[1].ShootPublicKey,
+				PresharedKey: wgInfoDataArray[1].PeerPresharedKey,
+				AllowedIPs:   fmt.Sprintf("%s/32", wgInfoDataArray[1].LocalWireguardIP),
+			},
+			Peer3: &wireguard.PeerInfo{
+				PublicKey:    wgInfoDataArray[2].ShootPublicKey,
+				PresharedKey: wgInfoDataArray[2].PeerPresharedKey,
+				AllowedIPs:   fmt.Sprintf("%s/32", wgInfoDataArray[2].LocalWireguardIP),
+			},
 		}
+		logger.Logger.Errorf("SeedNAME:----------------%s\nSECRETLIST:----------------%+v, peer1 %+v,peer2 %+v,peer3 %+v,\n", seed.Info.Name, val.Wireguard, val.Wireguard.Peer1, val.Wireguard.Peer2, val.Wireguard.Peer3)
 		if err := w.Deploy(ctx); err != nil {
 			return err
 		}
