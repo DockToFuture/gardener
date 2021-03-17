@@ -17,7 +17,6 @@ package secrets
 import (
 	"fmt"
 
-	"github.com/gardener/gardener/pkg/logger"
 	"github.com/gardener/gardener/pkg/utils/infodata"
 	wg "golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -90,7 +89,6 @@ func (w *WireguardSecretConfig) GenerateInfoData() (infodata.InfoData, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Logger.Errorf("-------------------GenerateInfoData--------------peerPresharedKEy%s,shootprivatek%s,shootpublickey%s", peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
 	return NewWireguardInfoData(*localWireguardIP, w.RemoteWireguardIP, peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String(), w.PeerPublicKey, w.RemoteEndpoint, w.SeedName), nil
 }
 
@@ -139,7 +137,6 @@ func (w *WireguardSecretConfig) GenerateWireguard() (*Wireguard, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Logger.Errorf("-------------------GenerateWireguard--------------peerPresharedKEy%s,shootprivatek%s,shootpublickey%s", peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
 	return w.generateWithKeys(*localWireguardIP, peerPresharedKey.String(), shootPrivateKey.String(), shootPublicKey.String())
 }
 

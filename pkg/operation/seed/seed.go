@@ -794,7 +794,6 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 				AllowedIPs:   fmt.Sprintf("%s/32", wgInfoDataArray[2].LocalWireguardIP),
 			},
 		}
-		logger.Logger.Errorf("SeedNAME:----------------%s\nSECRETLIST:----------------%+v, peer1 %+v,peer2 %+v,peer3 %+v,\n", seed.Info.Name, val.Wireguard, val.Wireguard.Peer1, val.Wireguard.Peer2, val.Wireguard.Peer3)
 		if err := w.Deploy(ctx); err != nil {
 			return err
 		}

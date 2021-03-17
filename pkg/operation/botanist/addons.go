@@ -481,7 +481,6 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 				"peerEndpoint":     string(b.Secrets[common.WireguardSecretName].Data["remoteEndpoint"]),
 			}
 		}
-		b.Logger.Errorf("ADDONSSHOOTNAME:----------------%s\nSeedNAME:----------------%s\n----------------privateKey %s, pk %s, presharedkey %s, ipaddress %s\n", b.Shoot.Info.Name, b.Seed.Info.Name, string(b.Secrets[common.WireguardSecretName].Data["privateKey"]), string(b.Secrets[common.WireguardSecretName].Data["peerPublicKey"]), string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]), string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]))
 
 		vpnShoot, err := b.InjectShootShootImages(vpnShootConfig, common.VPNShootImageName)
 		if err != nil {

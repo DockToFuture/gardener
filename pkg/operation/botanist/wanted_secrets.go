@@ -754,7 +754,6 @@ func (b *Botanist) generateWantedSecretConfigs(basicAuthAPIServer *secrets.Basic
 				return &ip, nil
 			},
 		})
-		b.Logger.Errorf("SHOOTNAME:----------------%s\nSeedNAME:----------------%s\nSECRETLIST:----------------%+v\n", b.Shoot.Info.Name, b.Seed.Info.Name, secretList[len(secretList)-1])
 	}
 
 	return secretList, nil
