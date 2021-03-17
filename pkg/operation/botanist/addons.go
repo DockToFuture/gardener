@@ -34,11 +34,13 @@ import (
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
 
+	kubelinkv1alpha1 "github.com/mandelsoft/kubelink/pkg/apis/kubelink/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -479,6 +481,24 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 				"peerPresharedKey": string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]),
 				"peerAllowedIPs":   fmt.Sprintf("%s/32", b.Secrets[common.WireguardSecretName].Data["remoteWireguardIP"]),
 				"peerEndpoint":     string(b.Secrets[common.WireguardSecretName].Data["remoteEndpoint"]),
+			}
+			shootKubelink := kubelinkv1alpha1.KubeLink{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "KubeLink",
+					APIVersion: "v1alpha1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: b.Shoot.SeedNamespace,
+				},
+				Spec: kubelinkv1alpha1.KubeLinkSpec{
+					ClusterAddress: fmt.Sprintf("%s/%s", string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]), wireguardCIDRPostfix),
+					Endpoint:       "Inbound",
+					PublicKey:      string(b.Secrets[common.WireguardSecretName].Data["publicKey"]),
+					PresharedKey:   string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]),
+				},
+			}
+			if _, err := controllerutil.CreateOrUpdate(ctx, b.K8sSeedClient.Client(), shootKubelink, func() error { return nil }); err != nil {
+				return nil, err
 			}
 		}
 
