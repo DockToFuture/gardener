@@ -751,7 +751,6 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 			PrivateKey:     *seed.Info.Status.WireguardPrivateKey,
 			PublicKey:      *seed.Info.Status.WireguardPublicKey,
 		}
-		logger.Logger.Errorf("KUBELINK---------------------- %+v", kubelinkResources)
 		if err := k.Deploy(ctx); err != nil {
 			return err
 		}
