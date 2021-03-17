@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Helm chart for custom resource definitions of kubelink
+name: kubelink-crds
+version: 0.1.0

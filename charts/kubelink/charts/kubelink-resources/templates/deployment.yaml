@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kubelink-broker
+    component: kubelink-broker
+  name: kubelink-broker
+  namespace: kubelink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubelink
+      component: kubelink-broker
+  template:
+    metadata:
+      labels:
+        app: kubelink
+        component: kubelink-broker
+    spec:
+      hostNetwork: true
+      containers:
+        - name: broker
+          image: mandelsoft/kubelink:qualified
+          imagePullPolicy: "Always"
+          args:
+            - --controllers=broker
+            - --mode=wireguard
+            - --secret=wireguard
+            - --server-port-http=8180
+            - --broker-port=8188
+            - --node-cidr={{ .Values.nodeCIDR }}
+            - --ifce-name=kubelink
+            - --ipip=shared
+          securityContext:
+            privileged: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8180
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 8180
+              protocol: TCP
+            - containerPort: 8188
+              protocol: TCP
+          resources:
+            {}
+      serviceAccountName: kubelink
+      terminationGracePeriodSeconds: 120

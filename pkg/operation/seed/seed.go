@@ -46,6 +46,7 @@ import (
 	"github.com/gardener/gardener/pkg/operation/botanist/systemcomponents/metricsserver"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/operation/seed/istio"
+	"github.com/gardener/gardener/pkg/operation/seed/kubelink"
 	"github.com/gardener/gardener/pkg/operation/seed/scheduler"
 	"github.com/gardener/gardener/pkg/operation/seed/wireguard"
 	"github.com/gardener/gardener/pkg/utils"
@@ -715,6 +716,50 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 		}
 	}
 
+	kubelinkResources := kubelink.KubelinkResources{}
+	k := kubelink.NewKubelink("kubelink", chartApplier, common.ChartPath, &kubelinkResources)
+	if gardenletfeatures.FeatureGate.Enabled(features.WireguardTunnel) && seed.Info.Spec.Settings.Wireguard != nil && seed.Info.Spec.Settings.Wireguard.Enabled {
+		if seed.Info.Status.WireguardIP == nil {
+			ipamManager, err := GetOrCreate(seed, k8sGardenClient)
+			if err != nil {
+				return err
+			}
+			ip, err := ipamManager.AcquireIP()
+			seedCopy := seed.Info.DeepCopy()
+			seed.Info.Status.WireguardIP = &ip
+			if err != nil {
+				return err
+			}
+			seedPrivateKey, err := wg.GeneratePrivateKey()
+			if err != nil {
+				return err
+			}
+			seedPublicKey := seedPrivateKey.PublicKey().String()
+			seed.Info.Status.WireguardPublicKey = &seedPublicKey
+			seedPrivateKeyString := seedPrivateKey.String()
+			seed.Info.Status.WireguardPrivateKey = &seedPrivateKeyString
+			if err := k8sGardenClient.Client().Status().Patch(ctx, seed.Info, client.MergeFrom(seedCopy)); err != nil {
+				message := fmt.Sprintf("Seeds %s's state with wireguard IP was NOT successfully synced: %v", seed.Info.Name, err)
+				logger.Logger.WithField("seed", seed.Info.Name).Error(message)
+				return err
+			}
+		}
+		kubelinkResources.Resources = &kubelink.KubelinkValues{
+			ClusterAddress: fmt.Sprintf("%s/%s", *seed.Info.Status.WireguardIP, strings.Split(seed.Info.Spec.Settings.Wireguard.CIDR, "/")[1]),
+			NodeCIDR:       *seed.Info.Spec.Networks.Nodes,
+			PodCIDR:        seed.Info.Spec.Networks.Pods,
+			PrivateKey:     *seed.Info.Status.WireguardPrivateKey,
+			PublicKey:      *seed.Info.Status.WireguardPublicKey,
+		}
+		logger.Logger.Errorf("KUBELINK---------------------- %+v", kubelinkResources)
+		if err := k.Deploy(ctx); err != nil {
+			return err
+		}
+	} else {
+		if err := k.Destroy(ctx); err != nil {
+			return err
+		}
+	}
 	val := wireguard.IntermediateValues{}
 	w := wireguard.NewWireguard("wireguard", chartApplier, common.ChartPath, &val)
 	if gardenletfeatures.FeatureGate.Enabled(features.WireguardTunnel) && seed.Info.Spec.Settings.Wireguard != nil && seed.Info.Spec.Settings.Wireguard.Enabled {

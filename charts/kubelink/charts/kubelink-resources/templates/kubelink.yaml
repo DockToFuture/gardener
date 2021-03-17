@@ -1,0 +1,9 @@
+apiVersion: kubelink.mandelsoft.org/v1alpha1
+kind: KubeLink
+metadata:
+  name: seed-local-link
+spec:
+  endpoint: LocalLink
+  clusterAddress: {{ .Values.clusterAddress }}
+  dns:
+    omitDNSPropagation: true

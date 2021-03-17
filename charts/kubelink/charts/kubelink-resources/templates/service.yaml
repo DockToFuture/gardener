@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kubelink
+  annotations:
+    #dns.gardener.cloud/class: garden
+    #dns.gardener.cloud/dnsnames: kubelink.dm-wireguard.core.shoot.dev.k8s-hana.ondemand.com
+    #dns.gardener.cloud/ttl: "500"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  name: kubelink
+  namespace: kubelink
+spec:
+  selector:
+    app: kubelink
+    component: kubelink-broker
+  ports:
+    - name: wireguard
+      port: 8777
+      protocol: UDP
+      targetPort: 8188
+  sessionAffinity: None
+  type: LoadBalancer

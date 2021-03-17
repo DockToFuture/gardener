@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Helm chart for resources of kubelink
+name: kubelink-resources
+version: 0.1.0
