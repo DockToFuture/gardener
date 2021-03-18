@@ -34,7 +34,7 @@ import (
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
 
-	kubelinkv1alpha1 "github.com/mandelsoft/kubelink/pkg/apis/kubelink/v1alpha1"
+	kubelinkv1alpha1 "github.com/scheererj/kubelink/pkg/apis/kubelink/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -485,7 +485,7 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 			shootKubelink := kubelinkv1alpha1.KubeLink{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "KubeLink",
-					APIVersion: "v1alpha1",
+					APIVersion: "kubelink.mandelsoft.org/v1alpha1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: b.Shoot.SeedNamespace,
@@ -497,7 +497,7 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 					PresharedKey:   string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]),
 				},
 			}
-			if _, err := controllerutil.CreateOrUpdate(ctx, b.K8sSeedClient.Client(), shootKubelink, func() error { return nil }); err != nil {
+			if _, err := controllerutil.CreateOrUpdate(ctx, b.K8sSeedClient.Client(), &shootKubelink, func() error { return nil }); err != nil {
 				return nil, err
 			}
 		}
