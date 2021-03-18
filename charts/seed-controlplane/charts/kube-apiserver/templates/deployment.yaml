@@ -389,7 +389,7 @@ spec:
           readOnly: false
       {{- else if not .Values.konnectivityTunnel.enabled }}
       - name: vpn-seed
-        image: {{ index .Values.images "vpn-seed" }}
+        image: eu.gcr.io/gardener-project/test/vpn-seed:0.20.0-dev #{{ index .Values.images "vpn-seed" }}
         imagePullPolicy: IfNotPresent
         env:
         - name: MAIN_VPN_SEED
@@ -401,8 +401,8 @@ spec:
           value: {{ .Values.wireguard.vpnPort | quote }}
         - name: ENDPOINT
           value: {{ .Values.wireguard.vpnEndpoint }}
-        - name: USE_UDP
-          value: {{ .Values.wireguard.useUDP | quote }}
+        - name: PROTOCOL
+          value: {{ .Values.wireguard.protocol }}
         {{- end }}
         - name: APISERVER_AUTH_MODE
           value: client-cert

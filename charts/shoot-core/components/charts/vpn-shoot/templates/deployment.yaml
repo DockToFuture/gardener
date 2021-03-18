@@ -46,12 +46,11 @@ spec:
 {{- if .Values.wireguard.enabled }}
       initContainers:
       - name: vpn-shoot-wireguard-init
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-wireguard:0.7
+        image: eu.gcr.io/gardener-project/test/vpn-shoot-wg:0.20.0-dev
         command:
-        - bash
-        args:
-        - -c
-        - '/usr/bin/wg-quick up wg0'
+        - /usr/bin/wg-quick
+        - up
+        - wg0
         securityContext:
           privileged: true
           capabilities:
@@ -63,7 +62,7 @@ spec:
 {{- end }}
       containers:
       - name: vpn-shoot
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-dev:0.7 #{{ index .Values.images "vpn-shoot" }}
+        image: eu.gcr.io/gardener-project/test/vpn-shoot:0.20.0-dev #{{ index .Values.images "vpn-shoot" }}
         imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE_NETWORK
@@ -75,8 +74,8 @@ spec:
           value: {{ .Values.nodeNetwork }}
         {{- end }}
         {{- if .Values.wireguard.enabled }}
-        - name: USE_UDP
-          value: {{ .Values.wireguard.useUDP | quote }}
+        - name: PROTOCOL
+          value: {{ .Values.wireguard.protocol }}
         {{- end }}
         securityContext:
           privileged: true
@@ -104,7 +103,7 @@ spec:
           name: vpn-shoot-dh
 {{- if .Values.wireguard.enabled }}
       - name: readvertiser
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-wireguard:0.7
+        image: eu.gcr.io/gardener-project/test/vpn-shoot-wg:0.20.0-dev
         command:
         - /readvertiser
         args:

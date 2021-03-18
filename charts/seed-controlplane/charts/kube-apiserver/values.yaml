@@ -178,4 +178,4 @@ wireguard:
   enabled: false
   vpnPort: "1194"
   vpnEndpoint: 192.168.17.2
-  useUDP: "true"
+  protocol: tcp
