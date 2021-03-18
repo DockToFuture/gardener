@@ -748,8 +748,8 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 			ClusterAddress: fmt.Sprintf("%s/%s", *seed.Info.Status.WireguardIP, strings.Split(seed.Info.Spec.Settings.Wireguard.CIDR, "/")[1]),
 			NodeCIDR:       *seed.Info.Spec.Networks.Nodes,
 			PodCIDR:        seed.Info.Spec.Networks.Pods,
-			PrivateKey:     *seed.Info.Status.WireguardPrivateKey,
-			PublicKey:      *seed.Info.Status.WireguardPublicKey,
+			PrivateKey:     utils.EncodeBase64([]byte(*seed.Info.Status.WireguardPrivateKey)),
+			PublicKey:      utils.EncodeBase64([]byte(*seed.Info.Status.WireguardPublicKey)),
 		}
 		if err := k.Deploy(ctx); err != nil {
 			return err

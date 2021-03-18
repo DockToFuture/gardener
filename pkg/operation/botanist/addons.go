@@ -482,19 +482,23 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 				"peerAllowedIPs":   fmt.Sprintf("%s/32", b.Secrets[common.WireguardSecretName].Data["remoteWireguardIP"]),
 				"peerEndpoint":     string(b.Secrets[common.WireguardSecretName].Data["remoteEndpoint"]),
 			}
+			omitDNSPropagation := true
 			shootKubelink := kubelinkv1alpha1.KubeLink{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "KubeLink",
 					APIVersion: "kubelink.mandelsoft.org/v1alpha1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name: b.Shoot.SeedNamespace,
+					Name: fmt.Sprintf("shoots--%s", b.Shoot.SeedNamespace),
 				},
 				Spec: kubelinkv1alpha1.KubeLinkSpec{
 					ClusterAddress: fmt.Sprintf("%s/%s", string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]), wireguardCIDRPostfix),
 					Endpoint:       "Inbound",
 					PublicKey:      string(b.Secrets[common.WireguardSecretName].Data["publicKey"]),
 					PresharedKey:   string(b.Secrets[common.WireguardSecretName].Data["peerPresharedKey"]),
+					DNS: &kubelinkv1alpha1.KubeLinkDNS{
+						OmitDNSPropagation: &omitDNSPropagation,
+					},
 				},
 			}
 			if _, err := controllerutil.CreateOrUpdate(ctx, b.K8sSeedClient.Client(), &shootKubelink, func() error { return nil }); err != nil {
