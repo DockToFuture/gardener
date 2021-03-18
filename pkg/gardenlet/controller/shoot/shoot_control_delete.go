@@ -479,6 +479,12 @@ func (c *Controller) runDeleteShootFlow(ctx context.Context, o *operation.Operat
 			Dependencies: flow.NewTaskIDs(syncPointCleaned, waitUntilControlPlaneDeleted),
 		})
 
+		_ = g.Add(flow.Task{
+			Name:         "Deleting Kubelink resource in seed",
+			Fn:           flow.TaskFn(botanist.DeleteKubelinkResources).RetryUntilTimeout(defaultInterval, defaultTimeout),
+			Dependencies: flow.NewTaskIDs(syncPointCleaned),
+		})
+
 		destroyControlPlaneExposure = g.Add(flow.Task{
 			Name:         "Destroying shoot control plane exposure",
 			Fn:           botanist.Shoot.Components.Extensions.ControlPlaneExposure.Destroy,

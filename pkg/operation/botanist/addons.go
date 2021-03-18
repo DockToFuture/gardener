@@ -25,6 +25,7 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/gardener/gardener/pkg/chartrenderer"
+	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/controllerutils"
 	netpol "github.com/gardener/gardener/pkg/operation/botanist/addons/networkpolicy"
 	"github.com/gardener/gardener/pkg/operation/botanist/component"
@@ -33,7 +34,6 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
-
 	kubelinkv1alpha1 "github.com/scheererj/kubelink/pkg/apis/kubelink/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -590,4 +590,22 @@ func (b *Botanist) getCoreDNSRestartTimestamp(ctx context.Context) (string, erro
 		return "", nil
 	}
 	return val, nil
+}
+
+// DeleteKubelinkResources removes the kubelink configuration for the shoot from the seed if it exists
+func (b *Botanist) DeleteKubelinkResources(ctx context.Context) error {
+	if b.Seed.Info.Spec.Settings != nil && b.Seed.Info.Spec.Settings.Wireguard != nil && b.Seed.Info.Spec.Settings.Wireguard.Enabled && b.Shoot.WireguardTunnelEnabled {
+		shootKubelink := kubelinkv1alpha1.KubeLink{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "KubeLink",
+				APIVersion: "kubelink.mandelsoft.org/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: fmt.Sprintf("shoots--%s", b.Shoot.SeedNamespace),
+			},
+		}
+
+		return client.IgnoreNotFound(b.K8sSeedClient.Client().Delete(ctx, &shootKubelink, kubernetes.DefaultDeleteOptions...))
+	}
+	return nil
 }
