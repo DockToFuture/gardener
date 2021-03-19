@@ -45,13 +45,14 @@ import (
 
 // Builder is an object that builds Shoot objects.
 type Builder struct {
-	shootObjectFunc  func(context.Context) (*gardencorev1beta1.Shoot, error)
-	cloudProfileFunc func(string) (*gardencorev1beta1.CloudProfile, error)
-	shootSecretFunc  func(context.Context, client.Client, string, string) (*corev1.Secret, error)
-	projectName      string
-	internalDomain   *garden.Domain
-	defaultDomains   []*garden.Domain
-	disableDNS       bool
+	shootObjectFunc        func(context.Context) (*gardencorev1beta1.Shoot, error)
+	cloudProfileFunc       func(string) (*gardencorev1beta1.CloudProfile, error)
+	shootSecretFunc        func(context.Context, client.Client, string, string) (*corev1.Secret, error)
+	projectName            string
+	internalDomain         *garden.Domain
+	defaultDomains         []*garden.Domain
+	disableDNS             bool
+	wireguardTunnelEnabled bool
 }
 
 // Shoot is an object containing information about a Shoot cluster.
