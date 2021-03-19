@@ -594,7 +594,7 @@ func (b *Botanist) getCoreDNSRestartTimestamp(ctx context.Context) (string, erro
 
 // DeleteKubelinkResources removes the kubelink configuration for the shoot from the seed if it exists
 func (b *Botanist) DeleteKubelinkResources(ctx context.Context) error {
-	if b.Seed.Info.Spec.Settings != nil && b.Seed.Info.Spec.Settings.Wireguard != nil && b.Seed.Info.Spec.Settings.Wireguard.Enabled && b.Shoot.WireguardTunnelEnabled {
+	if b.Shoot.WireguardTunnelEnabled {
 		shootKubelink := kubelinkv1alpha1.KubeLink{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "KubeLink",
