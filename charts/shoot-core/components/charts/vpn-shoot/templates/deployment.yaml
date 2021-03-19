@@ -46,7 +46,7 @@ spec:
 {{- if .Values.wireguard.enabled }}
       initContainers:
       - name: vpn-shoot-wireguard-init
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-wg:0.20.0-dev
+        image: {{ index .Values.images "vpn-shoot-wireguard" }}
         command:
         - /usr/bin/wg-quick
         - up
@@ -62,7 +62,7 @@ spec:
 {{- end }}
       containers:
       - name: vpn-shoot
-        image: eu.gcr.io/gardener-project/test/vpn-shoot:0.20.0-dev #{{ index .Values.images "vpn-shoot" }}
+        image: {{ index .Values.images "vpn-shoot" }}
         imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE_NETWORK
@@ -103,7 +103,7 @@ spec:
           name: vpn-shoot-dh
 {{- if .Values.wireguard.enabled }}
       - name: readvertiser
-        image: eu.gcr.io/gardener-project/test/vpn-shoot-wg:0.20.0-dev
+        image: {{ index .Values.images "vpn-shoot-wireguard" }}
         command:
         - /readvertiser
         args:

@@ -333,6 +333,9 @@ const (
 	// VPNShootImageName is the name of the VPNShoot image.
 	VPNShootImageName = "vpn-shoot"
 
+	// VPNShootWireguardImageName is the name of the VPNShoot Wireguard image.
+	VPNShootWireguardImageName = "vpn-shoot-wireguard"
+
 	// VPNSeedImageName is the name of the VPNSeed image.
 	VPNSeedImageName = "vpn-seed"
 

@@ -506,7 +506,7 @@ func (b *Botanist) generateCoreAddonsChart(ctx context.Context) (*chartrenderer.
 			}
 		}
 
-		vpnShoot, err := b.InjectShootShootImages(vpnShootConfig, common.VPNShootImageName)
+		vpnShoot, err := b.InjectShootShootImages(vpnShootConfig, common.VPNShootImageName, common.VPNShootWireguardImageName)
 		if err != nil {
 			return nil, err
 		}
