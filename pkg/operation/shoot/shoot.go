@@ -159,6 +159,12 @@ func (b *Builder) WithDefaultDomains(defaultDomains []*garden.Domain) *Builder {
 	return b
 }
 
+// WithWireguardTunnelEnabled sets the initial value for whether the wireguard tunnel should be enabled at the Builder.
+func (b *Builder) WithWireguardTunnelEnabled(enabled bool) *Builder {
+	b.wireguardTunnelEnabled = enabled
+	return b
+}
+
 // Build initializes a new Shoot object.
 func (b *Builder) Build(ctx context.Context, c client.Client) (*Shoot, error) {
 	shoot := &Shoot{}
@@ -229,9 +235,9 @@ func (b *Builder) Build(ctx context.Context, c client.Client) (*Shoot, error) {
 		shoot.KonnectivityTunnelEnabled = konnectivityTunnelEnabled
 	}
 
-	shoot.WireguardTunnelEnabled = gardenletfeatures.FeatureGate.Enabled(features.WireguardTunnel)
+	shoot.WireguardTunnelEnabled = b.wireguardTunnelEnabled && gardenletfeatures.FeatureGate.Enabled(features.WireguardTunnel)
 	if wireguardTunnelEnabled, err := strconv.ParseBool(shoot.Info.Annotations[v1alpha1constants.AnnotationShootWireguardTunnel]); err == nil {
-		shoot.WireguardTunnelEnabled = wireguardTunnelEnabled
+		shoot.WireguardTunnelEnabled = shoot.WireguardTunnelEnabled && wireguardTunnelEnabled
 	}
 
 	needsClusterAutoscaler, err := gardencorev1beta1helper.ShootWantsClusterAutoscaler(shootObject)

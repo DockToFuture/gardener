@@ -271,6 +271,7 @@ func (c *Controller) initializeOperation(ctx context.Context, logger *logrus.Ent
 		WithDisableDNS(!seedObj.Info.Spec.Settings.ShootDNS.Enabled).
 		WithInternalDomain(gardenObj.InternalDomain).
 		WithDefaultDomains(gardenObj.DefaultDomains).
+		WithWireguardTunnelEnabled(seed.Spec.Settings != nil && seed.Spec.Settings.Wireguard != nil && seed.Spec.Settings.Wireguard.Enabled).
 		Build(ctx, gardenClient.Client())
 	if err != nil {
 		return nil, err

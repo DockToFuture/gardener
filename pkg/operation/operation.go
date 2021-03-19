@@ -185,6 +185,7 @@ func (b *Builder) WithShootFrom(k8sGardenCoreInformers gardencoreinformers.Inter
 			WithDisableDNS(!seedObj.Info.Spec.Settings.ShootDNS.Enabled).
 			WithInternalDomain(gardenObj.InternalDomain).
 			WithDefaultDomains(gardenObj.DefaultDomains).
+			WithWireguardTunnelEnabled(seedObj.Info.Spec.Settings != nil && seedObj.Info.Spec.Settings.Wireguard != nil && seedObj.Info.Spec.Settings.Wireguard.Enabled).
 			Build(ctx, c)
 	}
 	return b
@@ -203,6 +204,7 @@ func (b *Builder) WithShootFromCluster(k8sGardenCoreInformers gardencoreinformer
 			WithDisableDNS(!seedObj.Info.Spec.Settings.ShootDNS.Enabled).
 			WithInternalDomain(gardenObj.InternalDomain).
 			WithDefaultDomains(gardenObj.DefaultDomains).
+			WithWireguardTunnelEnabled(seedObj.Info.Spec.Settings != nil && seedObj.Info.Spec.Settings.Wireguard != nil && seedObj.Info.Spec.Settings.Wireguard.Enabled).
 			Build(ctx, c)
 		if err != nil {
 			return nil, err
