@@ -89,6 +89,19 @@ github.com/evanphx/json-patch
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
+# github.com/gardener/controller-manager-library v0.2.1-0.20210311120503-cd9da8e3f6ac
+github.com/gardener/controller-manager-library/pkg/ctxutil
+github.com/gardener/controller-manager-library/pkg/errors
+github.com/gardener/controller-manager-library/pkg/fieldpath
+github.com/gardener/controller-manager-library/pkg/informerfactories
+github.com/gardener/controller-manager-library/pkg/kutil
+github.com/gardener/controller-manager-library/pkg/logger
+github.com/gardener/controller-manager-library/pkg/resources
+github.com/gardener/controller-manager-library/pkg/resources/abstract
+github.com/gardener/controller-manager-library/pkg/resources/conditions
+github.com/gardener/controller-manager-library/pkg/resources/errors
+github.com/gardener/controller-manager-library/pkg/resources/minimal
+github.com/gardener/controller-manager-library/pkg/utils
 # github.com/gardener/etcd-druid v0.3.0
 ## explicit
 github.com/gardener/etcd-druid/api/v1alpha1
@@ -365,6 +378,10 @@ github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
+# github.com/scheererj/kubelink v0.0.7
+## explicit
+github.com/scheererj/kubelink/pkg/apis/kubelink
+github.com/scheererj/kubelink/pkg/apis/kubelink/v1alpha1
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
 # github.com/sirupsen/logrus v1.6.0
@@ -484,10 +501,10 @@ golang.org/x/net/websocket
 # golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+# golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
 # golang.org/x/sys v0.0.0-20201117222635-ba5294a509c7
-## explicit
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -520,7 +537,7 @@ golang.org/x/text/width
 # golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 ## explicit
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200616195046-dc31b401abb5
+# golang.org/x/tools v0.0.0-20200711155855-7342f9734a7d
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/gcimporter
@@ -642,7 +659,7 @@ gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
-# gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3
 # istio.io/api v0.0.0-20201123152548-197f11e4ea09
 ## explicit

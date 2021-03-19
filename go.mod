@@ -39,7 +39,6 @@ require (
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
-	golang.org/x/sys v0.0.0-20201117222635-ba5294a509c7 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b
 	gomodules.xyz/jsonpatch/v2 v2.1.0
