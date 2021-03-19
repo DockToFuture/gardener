@@ -1904,17 +1904,9 @@ message SeedStatus {
   // +optional
   optional string clusterIdentity = 5;
 
-  // Wireguard IP of the seed
+  // Wireguard contains the wireguard configuration of the seed
   // +optional
-  optional string wireguardIP = 8;
-
-  // Wireguard public key of the seed
-  // +optional
-  optional string wireguardPublicKey = 9;
-
-  // Wireguard private key of the seed
-  // +optional
-  optional string wireguardPrivateKey = 10;
+  optional WireguardConfig wireguard = 6;
 }
 
 // SeedTaint describes a taint on a seed.
@@ -2274,6 +2266,21 @@ message WatchCacheSizes {
   // See: https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/
   // +optional
   repeated ResourceWatchCacheSize resources = 2;
+}
+
+// WireguardConfig contains the wireguard configuration of the seed
+message WireguardConfig {
+  // IP of the seed
+  // +optional
+  optional string ip = 1;
+
+  // Public key of the seed
+  // +optional
+  optional string publicKey = 2;
+
+  // Private key of the seed
+  // +optional
+  optional string privateKey = 3;
 }
 
 // Worker is the base definition of a worker group.

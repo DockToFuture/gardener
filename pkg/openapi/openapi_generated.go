@@ -167,6 +167,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.Volume":                                schema_pkg_apis_core_v1alpha1_Volume(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.VolumeType":                            schema_pkg_apis_core_v1alpha1_VolumeType(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.WatchCacheSizes":                       schema_pkg_apis_core_v1alpha1_WatchCacheSizes(ref),
+		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.WireguardConfig":                       schema_pkg_apis_core_v1alpha1_WireguardConfig(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.Worker":                                schema_pkg_apis_core_v1alpha1_Worker(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.WorkerKubernetes":                      schema_pkg_apis_core_v1alpha1_WorkerKubernetes(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1alpha1.WorkerSystemComponents":                schema_pkg_apis_core_v1alpha1_WorkerSystemComponents(ref),
@@ -300,6 +301,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.Volume":                                 schema_pkg_apis_core_v1beta1_Volume(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.VolumeType":                             schema_pkg_apis_core_v1beta1_VolumeType(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.WatchCacheSizes":                        schema_pkg_apis_core_v1beta1_WatchCacheSizes(ref),
+		"github.com/gardener/gardener/pkg/apis/core/v1beta1.WireguardConfig":                        schema_pkg_apis_core_v1beta1_WireguardConfig(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.Worker":                                 schema_pkg_apis_core_v1beta1_Worker(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.WorkerKubernetes":                       schema_pkg_apis_core_v1beta1_WorkerKubernetes(ref),
 		"github.com/gardener/gardener/pkg/apis/core/v1beta1.WorkerSystemComponents":                 schema_pkg_apis_core_v1beta1_WorkerSystemComponents(ref),
@@ -5696,32 +5698,17 @@ func schema_pkg_apis_core_v1alpha1_SeedStatus(ref common.ReferenceCallback) comm
 							Format:      "",
 						},
 					},
-					"wireguardIP": {
+					"wireguard": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard IP of the seed",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"wireguardPublicKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard public key of the seed",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"wireguardPrivateKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard private key of the seed",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "Wireguard contains the wireguard configuration of the seed",
+							Ref:         ref("github.com/gardener/gardener/pkg/apis/core/v1alpha1.WireguardConfig"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/gardener/gardener/pkg/apis/core/v1alpha1.Condition", "github.com/gardener/gardener/pkg/apis/core/v1alpha1.Gardener"},
+			"github.com/gardener/gardener/pkg/apis/core/v1alpha1.Condition", "github.com/gardener/gardener/pkg/apis/core/v1alpha1.Gardener", "github.com/gardener/gardener/pkg/apis/core/v1alpha1.WireguardConfig"},
 	}
 }
 
@@ -6646,6 +6633,40 @@ func schema_pkg_apis_core_v1alpha1_WatchCacheSizes(ref common.ReferenceCallback)
 		},
 		Dependencies: []string{
 			"github.com/gardener/gardener/pkg/apis/core/v1alpha1.ResourceWatchCacheSize"},
+	}
+}
+
+func schema_pkg_apis_core_v1alpha1_WireguardConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "WireguardConfig contains the wireguard configuration of the seed",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"ip": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IP of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"publicKey": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Public key of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"privateKey": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Private key of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -11841,32 +11862,17 @@ func schema_pkg_apis_core_v1beta1_SeedStatus(ref common.ReferenceCallback) commo
 							},
 						},
 					},
-					"wireguardIP": {
+					"wireguard": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard IP of the seed",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"wireguardPublicKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard public key of the seed",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"wireguardPrivateKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Wireguard private key of the seed",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "Wireguard contains the wireguard configuration of the seed",
+							Ref:         ref("github.com/gardener/gardener/pkg/apis/core/v1beta1.WireguardConfig"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/gardener/gardener/pkg/apis/core/v1beta1.Condition", "github.com/gardener/gardener/pkg/apis/core/v1beta1.Gardener", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+			"github.com/gardener/gardener/pkg/apis/core/v1beta1.Condition", "github.com/gardener/gardener/pkg/apis/core/v1beta1.Gardener", "github.com/gardener/gardener/pkg/apis/core/v1beta1.WireguardConfig", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
@@ -12662,6 +12668,40 @@ func schema_pkg_apis_core_v1beta1_WatchCacheSizes(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/gardener/gardener/pkg/apis/core/v1beta1.ResourceWatchCacheSize"},
+	}
+}
+
+func schema_pkg_apis_core_v1beta1_WireguardConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "WireguardConfig contains the wireguard configuration of the seed",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"ip": {
+						SchemaProps: spec.SchemaProps{
+							Description: "IP of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"publicKey": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Public key of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"privateKey": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Private key of the seed",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

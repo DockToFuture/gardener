@@ -739,9 +739,9 @@ func (b *Botanist) generateWantedSecretConfigs(basicAuthAPIServer *secrets.Basic
 		}
 		secretList = append(secretList, &secrets.WireguardSecretConfig{
 			Name:              common.WireguardSecretName,
-			RemoteWireguardIP: *b.Seed.Info.Status.WireguardIP,
+			RemoteWireguardIP: *b.Seed.Info.Status.Wireguard.IP,
 			RemoteEndpoint:    fmt.Sprintf("%s:%d", hostAddress, wireguardService.Spec.Ports[0].Port),
-			PeerPublicKey:     *b.Seed.Info.Status.WireguardPublicKey,
+			PeerPublicKey:     *b.Seed.Info.Status.Wireguard.PublicKey,
 			SeedName:          *b.Shoot.Info.Spec.SeedName,
 			GetIP: func() (*string, error) {
 				ipamManager, err := seed.GetOrCreate(b.Seed, b.K8sGardenClient)

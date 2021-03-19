@@ -716,14 +716,15 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 	kubelinkResources := kubelink.KubelinkResources{}
 	k := kubelink.NewKubelink("kubelink", chartApplier, common.ChartPath, &kubelinkResources)
 	if gardenletfeatures.FeatureGate.Enabled(features.WireguardTunnel) && seed.Info.Spec.Settings.Wireguard != nil && seed.Info.Spec.Settings.Wireguard.Enabled {
-		if seed.Info.Status.WireguardIP == nil {
+		if seed.Info.Status.Wireguard == nil {
+			seedCopy := seed.Info.DeepCopy()
+			seed.Info.Status.Wireguard = &gardencorev1beta1.WireguardConfig{}
 			ipamManager, err := GetOrCreate(seed, k8sGardenClient)
 			if err != nil {
 				return err
 			}
 			ip, err := ipamManager.AcquireIP()
-			seedCopy := seed.Info.DeepCopy()
-			seed.Info.Status.WireguardIP = &ip
+			seed.Info.Status.Wireguard.IP = &ip
 			if err != nil {
 				return err
 			}
@@ -732,9 +733,9 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 				return err
 			}
 			seedPublicKey := seedPrivateKey.PublicKey().String()
-			seed.Info.Status.WireguardPublicKey = &seedPublicKey
+			seed.Info.Status.Wireguard.PublicKey = &seedPublicKey
 			seedPrivateKeyString := seedPrivateKey.String()
-			seed.Info.Status.WireguardPrivateKey = &seedPrivateKeyString
+			seed.Info.Status.Wireguard.PrivateKey = &seedPrivateKeyString
 			if err := k8sGardenClient.Client().Status().Patch(ctx, seed.Info, client.MergeFrom(seedCopy)); err != nil {
 				message := fmt.Sprintf("Seeds %s's state with wireguard IP was NOT successfully synced: %v", seed.Info.Name, err)
 				logger.Logger.WithField("seed", seed.Info.Name).Error(message)
@@ -742,11 +743,11 @@ func BootstrapCluster(ctx context.Context, k8sGardenClient, k8sSeedClient kubern
 			}
 		}
 		kubelinkResources.Resources = &kubelink.KubelinkValues{
-			ClusterAddress: fmt.Sprintf("%s/%s", *seed.Info.Status.WireguardIP, strings.Split(seed.Info.Spec.Settings.Wireguard.CIDR, "/")[1]),
+			ClusterAddress: fmt.Sprintf("%s/%s", *seed.Info.Status.Wireguard.IP, strings.Split(seed.Info.Spec.Settings.Wireguard.CIDR, "/")[1]),
 			NodeCIDR:       *seed.Info.Spec.Networks.Nodes,
 			PodCIDR:        seed.Info.Spec.Networks.Pods,
-			PrivateKey:     utils.EncodeBase64([]byte(*seed.Info.Status.WireguardPrivateKey)),
-			PublicKey:      utils.EncodeBase64([]byte(*seed.Info.Status.WireguardPublicKey)),
+			PrivateKey:     utils.EncodeBase64([]byte(*seed.Info.Status.Wireguard.PrivateKey)),
+			PublicKey:      utils.EncodeBase64([]byte(*seed.Info.Status.Wireguard.PublicKey)),
 		}
 		if err := k.Deploy(ctx); err != nil {
 			return err

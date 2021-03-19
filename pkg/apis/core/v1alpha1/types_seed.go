@@ -104,15 +104,22 @@ type SeedStatus struct {
 	// ClusterIdentity is the identity of the Seed cluster
 	// +optional
 	ClusterIdentity *string `json:"clusterIdentity,omitempty" protobuf:"bytes,5,opt,name=clusterIdentity"`
-	// Wireguard IP of the seed
+	// Wireguard contains the wireguard configuration of the seed
 	// +optional
-	WireguardIP *string `json:"wireguardIP,omitempty" protobuf:"bytes,8,opt,name=wireguardIP"`
-	// Wireguard public key of the seed
+	Wireguard *WireguardConfig `json:"wireguard,omitempty" protobuf:"bytes,6,opt,name=wireguard"`
+}
+
+// WireguardConfig contains the wireguard configuration of the seed
+type WireguardConfig struct {
+	// IP of the seed
 	// +optional
-	WireguardPublicKey *string `json:"wireguardPublicKey,omitempty" protobuf:"bytes,9,opt,name=wireguardPublicKey"`
-	// Wireguard private key of the seed
+	IP *string `json:"ip,omitempty" protobuf:"bytes,1,opt,name=ip"`
+	// Public key of the seed
 	// +optional
-	WireguardPrivateKey *string `json:"wireguardPrivateKey,omitempty" protobuf:"bytes,10,opt,name=wireguardPrivateKey"`
+	PublicKey *string `json:"publicKey,omitempty" protobuf:"bytes,2,opt,name=publicKey"`
+	// Private key of the seed
+	// +optional
+	PrivateKey *string `json:"privateKey,omitempty" protobuf:"bytes,3,opt,name=privateKey"`
 }
 
 // SeedBackup contains the object store configuration for backups for shoot (currently only etcd).

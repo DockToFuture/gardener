@@ -7793,38 +7793,16 @@ Defaults to Capacity.</p>
 </tr>
 <tr>
 <td>
-<code>wireguardIP</code></br>
+<code>wireguard</code></br>
 <em>
-string
+<a href="#core.gardener.cloud/v1beta1.WireguardConfig">
+WireguardConfig
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Wireguard IP of the seed</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>wireguardPublicKey</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Wireguard public key of the seed</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>wireguardPrivateKey</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Wireguard private key of the seed</p>
+<p>Wireguard contains the wireguard configuration of the seed</p>
 </td>
 </tr>
 </tbody>
@@ -9057,6 +9035,61 @@ See: <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/
 <p>Resources configures the watch cache size of the kube-apiserver per resource
 (flag <code>--watch-cache-sizes</code>).
 See: <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/">https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="core.gardener.cloud/v1beta1.WireguardConfig">WireguardConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#core.gardener.cloud/v1beta1.SeedStatus">SeedStatus</a>)
+</p>
+<p>
+<p>WireguardConfig contains the wireguard configuration of the seed</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ip</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IP of the seed</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>publicKey</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Public key of the seed</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>privateKey</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Private key of the seed</p>
 </td>
 </tr>
 </tbody>

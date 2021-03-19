@@ -151,8 +151,8 @@ func NewLockedIpamManager(addressProviders []AddressProvider, cidr string, reser
 }
 
 func (p *WireguardSeedAddressProvider) Addresses() ([]string, error) {
-	if p.Seed.Status.WireguardIP != nil {
-		return []string{*p.Seed.Status.WireguardIP}, nil
+	if p.Seed.Status.Wireguard.IP != nil {
+		return []string{*p.Seed.Status.Wireguard.IP}, nil
 	}
 	return []string{}, nil
 }
