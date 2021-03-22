@@ -570,8 +570,7 @@ func (b *Botanist) DeployKubeAPIServer(ctx context.Context) error {
 				"serverPort": konnectivity.ServerHTTPSPort,
 			},
 			"wireguard": map[string]interface{}{
-				"enabled":     b.Shoot.WireguardTunnelEnabled,
-				"vpnEndpoint": string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"]),
+				"enabled": b.Shoot.WireguardTunnelEnabled,
 			},
 			"hvpa": map[string]interface{}{
 				"enabled": hvpaEnabled,
@@ -612,6 +611,10 @@ func (b *Botanist) DeployKubeAPIServer(ctx context.Context) error {
 			"apiserverFQDN":     b.Shoot.ComputeOutOfClusterAPIServerAddress(b.APIServerAddress, true),
 			"podMutatorEnabled": b.APIServerSNIPodMutatorEnabled(),
 		}
+	}
+
+	if b.Shoot.WireguardTunnelEnabled {
+		defaultValues["wireguard"].(map[string]interface{})["vpnEndpoint"] = string(b.Secrets[common.WireguardSecretName].Data["localWireguardIP"])
 	}
 
 	enableEtcdEncryption, err := version.CheckVersionMeetsConstraint(b.Shoot.Info.Spec.Kubernetes.Version, ">= 1.13")
