@@ -162,10 +162,14 @@ func (c *Controller) runPrepareShootControlPlaneMigration(o *operation.Operation
 			Name: "Ensuring that ShootState exists",
 			Fn:   flow.TaskFn(botanist.EnsureShootStateExists).RetryUntilTimeout(defaultInterval, defaultTimeout),
 		})
+		wireguardSeedLBReady = g.Add(flow.Task{
+			Name: "Waiting until wireguard seed LoadBalancer is ready",
+			Fn:   flow.TaskFn(botanist.WaitUntilSeedWireguardServiceIsReady).DoIf(o.Shoot.WireguardTunnelEnabled),
+		})
 		generateSecrets = g.Add(flow.Task{
 			Name:         "Generating secrets and saving them into ShootState",
 			Fn:           flow.TaskFn(botanist.GenerateAndSaveSecrets),
-			Dependencies: flow.NewTaskIDs(ensureShootStateExists),
+			Dependencies: flow.NewTaskIDs(ensureShootStateExists).InsertIf(o.Shoot.WireguardTunnelEnabled, wireguardSeedLBReady),
 		})
 		deploySecrets = g.Add(flow.Task{
 			Name:         "Deploying Shoot certificates / keys",

@@ -204,10 +204,14 @@ func (c *Controller) runDeleteShootFlow(ctx context.Context, o *operation.Operat
 			Fn:           flow.TaskFn(botanist.Shoot.Components.ControlPlane.KubeAPIServerService.Wait).DoIf(cleanupShootResources),
 			Dependencies: flow.NewTaskIDs(deployKubeAPIServerService),
 		})
+		wireguardSeedLBReady = g.Add(flow.Task{
+			Name: "Waiting until wireguard seed LoadBalancer is ready",
+			Fn:   flow.TaskFn(botanist.WaitUntilSeedWireguardServiceIsReady).DoIf(o.Shoot.WireguardTunnelEnabled),
+		})
 		generateSecrets = g.Add(flow.Task{
 			Name:         "Generating secrets and saving them into ShootState",
 			Fn:           flow.TaskFn(botanist.GenerateAndSaveSecrets).DoIf(nonTerminatingNamespace),
-			Dependencies: flow.NewTaskIDs(ensureShootStateExists),
+			Dependencies: flow.NewTaskIDs(ensureShootStateExists).InsertIf(o.Shoot.WireguardTunnelEnabled, wireguardSeedLBReady),
 		})
 		deploySecrets = g.Add(flow.Task{
 			Name:         "Deploying Shoot certificates / keys",

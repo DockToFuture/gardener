@@ -57,6 +57,14 @@ func (b *Botanist) WaitUntilVpnShootServiceIsReady(ctx context.Context) error {
 	return err
 }
 
+// WaitUntilSeedWireguardServiceIsReady waits until the external load balancer of the seed wireguard tunnel endpoint has been created.
+func (b *Botanist) WaitUntilSeedWireguardServiceIsReady(ctx context.Context) error {
+	const timeout = 10 * time.Minute
+
+	_, err := kutil.WaitUntilLoadBalancerIsReady(ctx, b.K8sSeedClient, "kubelink", "kubelink", timeout, b.Logger)
+	return err
+}
+
 // WaitUntilKubeAPIServerIsDeleted waits until the kube-apiserver is deleted
 func (b *Botanist) WaitUntilKubeAPIServerIsDeleted(ctx context.Context) error {
 	return retry.UntilTimeout(ctx, 5*time.Second, 300*time.Second, func(ctx context.Context) (done bool, err error) {

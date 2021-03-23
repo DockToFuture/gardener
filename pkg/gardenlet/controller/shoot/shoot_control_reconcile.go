@@ -137,6 +137,10 @@ func (c *Controller) runReconcileShootFlow(ctx context.Context, o *operation.Ope
 			Fn:           flow.TaskFn(botanist.Shoot.Components.ControlPlane.KubeAPIServerService.Wait).SkipIf(o.Shoot.HibernationEnabled && !useSNI),
 			Dependencies: flow.NewTaskIDs(deployKubeAPIServerService),
 		})
+		wireguardSeedLBReady = g.Add(flow.Task{
+			Name: "Waiting until wireguard seed LoadBalancer is ready",
+			Fn:   flow.TaskFn(botanist.WaitUntilSeedWireguardServiceIsReady).DoIf(o.Shoot.WireguardTunnelEnabled),
+		})
 		generateSecrets = g.Add(flow.Task{
 			Name: "Generating secrets and saving them into ShootState",
 			Fn:   flow.TaskFn(botanist.GenerateAndSaveSecrets),
@@ -145,6 +149,7 @@ func (c *Controller) runReconcileShootFlow(ctx context.Context, o *operation.Ope
 				if !dnsEnabled && !o.Shoot.HibernationEnabled {
 					taskIDs.Insert(waitUntilKubeAPIServerServiceIsReady)
 				}
+				taskIDs.InsertIf(o.Shoot.WireguardTunnelEnabled, wireguardSeedLBReady)
 				return taskIDs
 			}(),
 		})
