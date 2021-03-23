@@ -726,7 +726,6 @@ func (b *Botanist) generateWantedSecretConfigs(basicAuthAPIServer *secrets.Basic
 
 	if b.Shoot.WireguardTunnelEnabled {
 		wireguardService := &corev1.Service{}
-		//err := b.K8sSeedClient.Client().Get(context.TODO(), client.ObjectKey{Namespace: "wireguard", Name: "wireguard-vpn"}, wireguardService)
 		err := b.K8sSeedClient.Client().Get(context.TODO(), client.ObjectKey{Namespace: "kubelink", Name: "kubelink"}, wireguardService)
 		if err != nil {
 			return nil, err
