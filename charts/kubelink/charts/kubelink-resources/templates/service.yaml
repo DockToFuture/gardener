@@ -9,6 +9,7 @@ metadata:
     #dns.gardener.cloud/dnsnames: kubelink.dm-wireguard.core.shoot.dev.k8s-hana.ondemand.com
     #dns.gardener.cloud/ttl: "500"
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    loadbalancer.openstack.org/enable-health-monitor: "false"
   name: kubelink
   namespace: kubelink
 spec:
