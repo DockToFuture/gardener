@@ -24,13 +24,13 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/huandu/xstrings v1.3.1
 	github.com/json-iterator/go v1.1.10
+	github.com/mandelsoft/kubelink v0.0.2-qual
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.5
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/robfig/cron v1.2.0
-	github.com/mandelsoft/kubelink v0.0.2-qual
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
