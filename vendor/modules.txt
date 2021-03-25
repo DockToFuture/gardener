@@ -265,6 +265,10 @@ github.com/magiconair/properties
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
+# github.com/mandelsoft/kubelink v0.0.2-qual
+## explicit
+github.com/mandelsoft/kubelink/pkg/apis/kubelink
+github.com/mandelsoft/kubelink/pkg/apis/kubelink/v1alpha1
 # github.com/mattn/go-colorable v0.1.2
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
@@ -378,10 +382,6 @@ github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
-# github.com/scheererj/kubelink v0.0.7
-## explicit
-github.com/scheererj/kubelink/pkg/apis/kubelink
-github.com/scheererj/kubelink/pkg/apis/kubelink/v1alpha1
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
 # github.com/sirupsen/logrus v1.6.0

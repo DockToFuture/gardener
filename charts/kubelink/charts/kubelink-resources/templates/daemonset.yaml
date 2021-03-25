@@ -21,7 +21,7 @@ spec:
       hostNetwork: true
       containers:
         - name: router
-          image: mandelsoft/kubelink:latest
+          image: mandelsoft/kubelink:qual
           imagePullPolicy: "Always"
           args:
             - --controllers=router

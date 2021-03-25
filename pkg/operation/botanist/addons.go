@@ -34,7 +34,7 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
-	kubelinkv1alpha1 "github.com/scheererj/kubelink/pkg/apis/kubelink/v1alpha1"
+	kubelinkv1alpha1 "github.com/mandelsoft/kubelink/pkg/apis/kubelink/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

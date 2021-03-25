@@ -22,7 +22,7 @@ spec:
       hostNetwork: true
       containers:
         - name: broker
-          image: mandelsoft/kubelink:qualified
+          image: mandelsoft/kubelink:qual
           imagePullPolicy: "Always"
           args:
             - --controllers=broker
