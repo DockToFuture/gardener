@@ -32,40 +32,40 @@ import (
 )
 
 // Acquire the next free IP address in the configured CIDR range respecting already reserved, but not used IPs
-func (ipam *IpamManager) AcquireIP() (net.IP, error) {
+func (ipam *ipamManager) acquireIP() (net.IP, error) {
 	addressesInUse := make(map[string]bool)
 	// Get all IPs currently in use, duplicates not allowed
-	for _, p := range ipam.Providers {
-		err := AddAddresses(&addressesInUse, p, ipam.NetworkRange, true)
+	for _, p := range ipam.providers {
+		err := addAddresses(&addressesInUse, p, ipam.networkRange, true)
 		if err != nil {
 			return nil, err
 		}
 	}
 	// Get all current IP reservations, duplicates allowed for a restricted amount of time as reservations should expire after some time and be actually used
-	for _, r := range ipam.Reservations {
-		err := AddAddresses(&addressesInUse, r, ipam.NetworkRange, false)
+	for _, r := range ipam.reservations {
+		err := addAddresses(&addressesInUse, r, ipam.networkRange, false)
 		if err != nil {
 			return nil, err
 		}
 	}
 	// Walk the CIDR range until a free IP is found
-	for ip := NextIP(DuplicateIP(ipam.NetworkRange.IP)); ipam.NetworkRange.Contains(ip); ip = NextIP(ip) {
+	for ip := nextIP(duplicateIP(ipam.networkRange.IP)); ipam.networkRange.Contains(ip); ip = nextIP(ip) {
 		if _, found := addressesInUse[ip.String()]; found {
 			continue
 		}
 		return ip, nil
 	}
-	return nil, fmt.Errorf("No IP available in range %s", ipam.NetworkRange.String())
+	return nil, fmt.Errorf("No IP available in range %s", ipam.networkRange.String())
 }
 
-func DuplicateIP(ip net.IP) net.IP {
+func duplicateIP(ip net.IP) net.IP {
 	result := make(net.IP, len(ip))
 	copy(result, ip)
 	return result
 }
 
 // Add the IP addresses of the given address provider to the address map, report duplicates in case they are not allowed
-func AddAddresses(addressMap *map[string]bool, provider AddressProvider, cidr *net.IPNet, reportDuplicates bool) error {
+func addAddresses(addressMap *map[string]bool, provider AddressProvider, cidr *net.IPNet, reportDuplicates bool) error {
 	addresses, err := provider.Addresses()
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func AddAddresses(addressMap *map[string]bool, provider AddressProvider, cidr *n
 }
 
 // Return the next IP address, returning nil on overflow
-func NextIP(ip net.IP) net.IP {
+func nextIP(ip net.IP) net.IP {
 	length := len(ip)
 	result := ip
 	for i := length - 1; i >= 0; i-- {
@@ -100,17 +100,17 @@ func NextIP(ip net.IP) net.IP {
 	return nil
 }
 
-func NewIpamManager(addressProviders []AddressProvider, reservationProviders []AddressProvider, cidr *net.IPNet) *IpamManager {
-	return &IpamManager{
-		Providers:    addressProviders,
-		Reservations: reservationProviders,
-		NetworkRange: cidr,
+func newIpamManager(addressProviders []AddressProvider, reservationProviders []AddressProvider, cidr *net.IPNet) *ipamManager {
+	return &ipamManager{
+		providers:    addressProviders,
+		reservations: reservationProviders,
+		networkRange: cidr,
 	}
 }
 
-func (rm *ReservationManager) Addresses() ([]string, error) {
+func (rm *reservationManager) Addresses() ([]string, error) {
 	result := []string{}
-	for k := range rm.ReservedAddresses {
+	for k := range rm.reservedAddresses {
 		result = append(result, k)
 	}
 	return result, nil
@@ -118,35 +118,35 @@ func (rm *ReservationManager) Addresses() ([]string, error) {
 
 // Acquires the next free IP address in the CIDR range ensuring mutual exclusion and temporary reservations
 func (m *LockedIpamManager) AcquireIP() (string, error) {
-	m.Mutex.Lock()
-	defer m.Mutex.Unlock()
-	ip, err := m.Ipam.AcquireIP()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	ip, err := m.ipam.acquireIP()
 	if err != nil {
 		return "", err
 	}
 	ipString := ip.String()
-	m.Reservations.ReservedAddresses[ipString] = true
-	time.AfterFunc(m.Reservations.ReservationDuration, func() {
-		m.Mutex.Lock()
-		defer m.Mutex.Unlock()
-		delete(m.Reservations.ReservedAddresses, ipString)
+	m.reservations.reservedAddresses[ipString] = true
+	time.AfterFunc(m.reservations.reservationDuration, func() {
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		delete(m.reservations.reservedAddresses, ipString)
 	})
 	return ipString, nil
 }
 
 func NewLockedIpamManager(addressProviders []AddressProvider, cidr string, reservationDuration time.Duration) (*LockedIpamManager, error) {
-	rm := &ReservationManager{
-		ReservationDuration: reservationDuration,
-		ReservedAddresses:   make(map[string]bool),
+	rm := &reservationManager{
+		reservationDuration: reservationDuration,
+		reservedAddresses:   make(map[string]bool),
 	}
 	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
 	return &LockedIpamManager{
-		Ipam:         NewIpamManager(addressProviders, []AddressProvider{rm}, ipNet),
-		Mutex:        sync.Mutex{},
-		Reservations: rm,
+		ipam:         newIpamManager(addressProviders, []AddressProvider{rm}, ipNet),
+		mutex:        sync.Mutex{},
+		reservations: rm,
 	}, nil
 }
 

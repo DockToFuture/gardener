@@ -32,23 +32,23 @@ type AddressProvider interface {
 	Addresses() ([]string, error)
 }
 
-type IpamManager struct {
-	Providers    []AddressProvider
-	Reservations []AddressProvider
-	NetworkRange *net.IPNet
+type ipamManager struct {
+	providers    []AddressProvider
+	reservations []AddressProvider
+	networkRange *net.IPNet
 }
 
 // Manages a map of address reservations, which are removed after a certain period of time
 // Assumes external locking/mutual exclusion
-type ReservationManager struct {
-	ReservationDuration time.Duration
-	ReservedAddresses   map[string]bool
+type reservationManager struct {
+	reservationDuration time.Duration
+	reservedAddresses   map[string]bool
 }
 
 type LockedIpamManager struct {
-	Ipam         *IpamManager
-	Mutex        sync.Mutex
-	Reservations *ReservationManager
+	ipam         *ipamManager
+	mutex        sync.Mutex
+	reservations *reservationManager
 }
 
 type WireguardSeedAddressProvider struct {
