@@ -29,10 +29,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	istionetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/api/networking/v1beta1"
 	istionetworkingv1beta1 "istio.io/api/networking/v1beta1"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -378,25 +375,6 @@ var _ = Describe("VpnSeedServer", func() {
 			},
 		}
 
-		gateway = &networkingv1beta1.Gateway{
-			ObjectMeta: metav1.ObjectMeta{Name: DeploymentName, Namespace: namespace},
-			Spec: v1beta1.Gateway{
-				Selector: map[string]string{
-					"app": "istio-ingressgateway",
-				},
-				Servers: []*v1beta1.Server{
-					{
-						Hosts: []string{kubeAPIServerHost},
-						Port: &v1beta1.Port{
-							Name:     "tls-tunnel",
-							Number:   8132,
-							Protocol: "HTTP",
-						},
-					},
-				},
-			},
-		}
-
 		networkPolicy = &networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "allow-to-vpn-seed-server",
@@ -508,29 +486,6 @@ var _ = Describe("VpnSeedServer", func() {
 			},
 		}
 
-		virtualService = &networkingv1beta1.VirtualService{
-			ObjectMeta: metav1.ObjectMeta{Name: DeploymentName, Namespace: namespace},
-			Spec: v1beta1.VirtualService{
-				ExportTo: []string{"*"},
-				Hosts:    []string{kubeAPIServerHost},
-				Gateways: []string{DeploymentName},
-				Http: []*v1beta1.HTTPRoute{
-					{
-						Route: []*v1beta1.HTTPRouteDestination{
-							{
-								Destination: &v1beta1.Destination{
-									Port: &v1beta1.PortSelector{
-										Number: 1194,
-									},
-									Host: DeploymentName,
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-
 		vpa = &autoscalingv1beta2.VerticalPodAutoscaler{
 			ObjectMeta: metav1.ObjectMeta{Name: DeploymentName + "-vpa", Namespace: namespace},
 			Spec: autoscalingv1beta2.VerticalPodAutoscalerSpec{
@@ -556,180 +511,6 @@ var _ = Describe("VpnSeedServer", func() {
 							MinAllowed: corev1.ResourceList{
 								corev1.ResourceCPU:    resource.MustParse("20m"),
 								corev1.ResourceMemory: resource.MustParse("20Mi"),
-							},
-						},
-					},
-				},
-			},
-		}
-
-		envoyFilter = &networkingv1alpha3.EnvoyFilter{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      namespace + "-vpn",
-				Namespace: istioNamespace,
-				OwnerReferences: []metav1.OwnerReference{{
-					APIVersion:         "v1",
-					Kind:               "Namespace",
-					Name:               namespace,
-					UID:                namespaceUID,
-					BlockOwnerDeletion: pointer.Bool(false),
-					Controller:         pointer.Bool(false),
-				}},
-			},
-			Spec: istionetworkingv1alpha3.EnvoyFilter{
-				WorkloadSelector: &istionetworkingv1alpha3.WorkloadSelector{
-					Labels: istioLabels,
-				},
-				ConfigPatches: []*istionetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-					&istionetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-						ApplyTo: istionetworkingv1alpha3.EnvoyFilter_NETWORK_FILTER,
-						Match: &istionetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-							Context: istionetworkingv1alpha3.EnvoyFilter_GATEWAY,
-							ObjectTypes: &istionetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-								Listener: &istionetworkingv1alpha3.EnvoyFilter_ListenerMatch{
-									Name:       fmt.Sprintf("0.0.0.0_%d", 8132),
-									PortNumber: 8132,
-									FilterChain: &istionetworkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-										Filter: &istionetworkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-											Name: "envoy.filters.network.http_connection_manager",
-										},
-									},
-								},
-							},
-						},
-						Patch: &istionetworkingv1alpha3.EnvoyFilter_Patch{
-							Operation: istionetworkingv1alpha3.EnvoyFilter_Patch_MERGE,
-							Value: &protobuftypes.Struct{
-								Fields: map[string]*protobuftypes.Value{
-									"name": &protobuftypes.Value{
-										Kind: &protobuftypes.Value_StringValue{
-											StringValue: "envoy.filters.network.http_connection_manager",
-										},
-									},
-									"typed_config": &protobuftypes.Value{
-										Kind: &protobuftypes.Value_StructValue{
-											StructValue: &protobuftypes.Struct{
-												Fields: map[string]*protobuftypes.Value{
-													"@type": &protobuftypes.Value{
-														Kind: &protobuftypes.Value_StringValue{
-															StringValue: "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
-														},
-													},
-													"route_config": &protobuftypes.Value{
-														Kind: &protobuftypes.Value_StructValue{
-															StructValue: &protobuftypes.Struct{
-																Fields: map[string]*protobuftypes.Value{
-																	"virtual_hosts": &protobuftypes.Value{
-																		Kind: &protobuftypes.Value_ListValue{
-																			ListValue: &protobuftypes.ListValue{
-																				Values: []*protobuftypes.Value{
-																					{
-																						Kind: &protobuftypes.Value_StructValue{
-																							StructValue: &protobuftypes.Struct{
-																								Fields: map[string]*protobuftypes.Value{
-																									"name": &protobuftypes.Value{
-																										Kind: &protobuftypes.Value_StringValue{
-																											StringValue: namespace,
-																										},
-																									},
-																									"domains": &protobuftypes.Value{
-																										Kind: &protobuftypes.Value_ListValue{
-																											ListValue: &protobuftypes.ListValue{
-																												Values: []*protobuftypes.Value{
-																													{
-																														Kind: &protobuftypes.Value_StringValue{
-																															StringValue: fmt.Sprintf("%s:%d", kubeAPIServerHost, 8132),
-																														},
-																													},
-																												},
-																											},
-																										},
-																									},
-																									"routes": &protobuftypes.Value{
-																										Kind: &protobuftypes.Value_ListValue{
-																											ListValue: &protobuftypes.ListValue{
-																												Values: []*protobuftypes.Value{
-																													{
-																														Kind: &protobuftypes.Value_StructValue{
-																															StructValue: &protobuftypes.Struct{
-																																Fields: map[string]*protobuftypes.Value{
-																																	"match": &protobuftypes.Value{
-																																		Kind: &protobuftypes.Value_StructValue{
-																																			StructValue: &protobuftypes.Struct{
-																																				Fields: map[string]*protobuftypes.Value{
-																																					"connect_matcher": &protobuftypes.Value{
-																																						Kind: &protobuftypes.Value_StructValue{
-																																							StructValue: &protobuftypes.Struct{},
-																																						},
-																																					},
-																																				},
-																																			},
-																																		},
-																																	},
-																																	"route": &protobuftypes.Value{
-																																		Kind: &protobuftypes.Value_StructValue{
-																																			StructValue: &protobuftypes.Struct{
-																																				Fields: map[string]*protobuftypes.Value{
-																																					"cluster": &protobuftypes.Value{
-																																						Kind: &protobuftypes.Value_StringValue{
-																																							StringValue: "outbound|1194||" + ServiceName + "." + namespace + ".svc.cluster.local",
-																																						},
-																																					},
-																																					"upgrade_configs": &protobuftypes.Value{
-																																						Kind: &protobuftypes.Value_ListValue{
-																																							ListValue: &protobuftypes.ListValue{
-																																								Values: []*protobuftypes.Value{
-																																									{
-																																										Kind: &protobuftypes.Value_StructValue{
-																																											StructValue: &protobuftypes.Struct{
-																																												Fields: map[string]*protobuftypes.Value{
-																																													"upgrade_type": &protobuftypes.Value{
-																																														Kind: &protobuftypes.Value_StringValue{
-																																															StringValue: "CONNECT",
-																																														},
-																																													},
-																																													"connect_config": &protobuftypes.Value{
-																																														Kind: &protobuftypes.Value_StructValue{
-																																															StructValue: &protobuftypes.Struct{},
-																																														},
-																																													},
-																																												},
-																																											},
-																																										},
-																																									},
-																																								},
-																																							},
-																																						},
-																																					},
-																																				},
-																																			},
-																																		},
-																																	},
-																																},
-																															},
-																														},
-																													},
-																												},
-																											},
-																										},
-																									},
-																								},
-																							},
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
 							},
 						},
 					},
@@ -859,27 +640,6 @@ var _ = Describe("VpnSeedServer", func() {
 				Expect(vpnSeedServer.Deploy(ctx)).To(MatchError(fakeErr))
 			})
 
-			It("should fail because the gateway cannot be created", func() {
-				gomock.InOrder(
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-tlsauth"), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-dh"), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, "allow-to-vpn-seed-server"), gomock.AssignableToTypeOf(&networkingv1.NetworkPolicy{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1.NetworkPolicy{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&appsv1.Deployment{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&appsv1.Deployment{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-envoy-config"), gomock.AssignableToTypeOf(&corev1.ConfigMap{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.ConfigMap{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()).Return(fakeErr),
-				)
-
-				Expect(vpnSeedServer.Deploy(ctx)).To(MatchError(fakeErr))
-			})
-
 			It("should fail because the destinationRule cannot be created", func() {
 				gomock.InOrder(
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&corev1.Secret{})),
@@ -894,35 +654,8 @@ var _ = Describe("VpnSeedServer", func() {
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&appsv1.Deployment{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-envoy-config"), gomock.AssignableToTypeOf(&corev1.ConfigMap{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.ConfigMap{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()).Return(fakeErr),
-				)
-
-				Expect(vpnSeedServer.Deploy(ctx)).To(MatchError(fakeErr))
-			})
-
-			It("should fail because the virtualService cannot be created", func() {
-				gomock.InOrder(
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-tlsauth"), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-dh"), gomock.AssignableToTypeOf(&corev1.Secret{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Secret{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, "allow-to-vpn-seed-server"), gomock.AssignableToTypeOf(&networkingv1.NetworkPolicy{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1.NetworkPolicy{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&appsv1.Deployment{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&appsv1.Deployment{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-envoy-config"), gomock.AssignableToTypeOf(&corev1.ConfigMap{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.ConfigMap{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{}), gomock.Any()).Return(fakeErr),
 				)
 
 				Expect(vpnSeedServer.Deploy(ctx)).To(MatchError(fakeErr))
@@ -942,12 +675,8 @@ var _ = Describe("VpnSeedServer", func() {
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&appsv1.Deployment{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-envoy-config"), gomock.AssignableToTypeOf(&corev1.ConfigMap{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.ConfigMap{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, ServiceName), gomock.AssignableToTypeOf(&corev1.Service{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Service{}), gomock.Any()).Return(fakeErr),
 				)
@@ -969,12 +698,8 @@ var _ = Describe("VpnSeedServer", func() {
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&appsv1.Deployment{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-envoy-config"), gomock.AssignableToTypeOf(&corev1.ConfigMap{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.ConfigMap{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, ServiceName), gomock.AssignableToTypeOf(&corev1.Service{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Service{}), gomock.Any()),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName+"-vpa"), gomock.AssignableToTypeOf(&autoscalingv1beta2.VerticalPodAutoscaler{})),
@@ -1016,20 +741,10 @@ var _ = Describe("VpnSeedServer", func() {
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(configMap))
 						}),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()).
-						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-							Expect(obj).To(DeepEqual(gateway))
-						}),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()).
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(destinationRule))
-						}),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{}), gomock.Any()).
-						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-							Expect(obj).To(DeepEqual(virtualService))
 						}),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, ServiceName), gomock.AssignableToTypeOf(&corev1.Service{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Service{}), gomock.Any()).
@@ -1041,10 +756,6 @@ var _ = Describe("VpnSeedServer", func() {
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(vpa))
 						}),
-					c.EXPECT().Get(ctx, kutil.Key(istioNamespace, namespace+"-vpn"), gomock.AssignableToTypeOf(&networkingv1alpha3.EnvoyFilter{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1alpha3.EnvoyFilter{}), gomock.Any()).Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-						Expect(obj).To(DeepEqual(envoyFilter))
-					}),
 				)
 				Expect(vpnSeedServer.Deploy(ctx)).To(Succeed())
 			})
@@ -1085,20 +796,10 @@ var _ = Describe("VpnSeedServer", func() {
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(configMap))
 						}),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.Gateway{}), gomock.Any()).
-						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-							Expect(obj).To(DeepEqual(gateway))
-						}),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.DestinationRule{}), gomock.Any()).
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(destinationRule))
-						}),
-					c.EXPECT().Get(ctx, kutil.Key(namespace, DeploymentName), gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1beta1.VirtualService{}), gomock.Any()).
-						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-							Expect(obj).To(DeepEqual(virtualService))
 						}),
 					c.EXPECT().Get(ctx, kutil.Key(namespace, ServiceName), gomock.AssignableToTypeOf(&corev1.Service{})),
 					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&corev1.Service{}), gomock.Any()).
@@ -1110,10 +811,6 @@ var _ = Describe("VpnSeedServer", func() {
 						Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
 							Expect(obj).To(DeepEqual(vpa))
 						}),
-					c.EXPECT().Get(ctx, kutil.Key(istioNamespace, namespace+"-vpn"), gomock.AssignableToTypeOf(&networkingv1alpha3.EnvoyFilter{})),
-					c.EXPECT().Patch(ctx, gomock.AssignableToTypeOf(&networkingv1alpha3.EnvoyFilter{}), gomock.Any()).Do(func(ctx context.Context, obj client.Object, _ client.Patch, _ ...client.PatchOption) {
-						Expect(obj).To(DeepEqual(envoyFilter))
-					}),
 				)
 
 				Expect(vpnSeedServer.Deploy(ctx)).To(Succeed())
@@ -1186,20 +883,6 @@ var _ = Describe("VpnSeedServer", func() {
 			Expect(vpnSeedServer.Destroy(ctx)).To(MatchError(fakeErr))
 		})
 
-		It("should fail because the gateway cannot be deleted", func() {
-			gomock.InOrder(
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-tlsauth"}}),
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-dh"}}),
-				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
-				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}).Return(fakeErr),
-			)
-
-			Expect(vpnSeedServer.Destroy(ctx)).To(MatchError(fakeErr))
-		})
-
 		It("should fail because the destinationRule cannot be deleted", func() {
 			gomock.InOrder(
 				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
@@ -1208,24 +891,7 @@ var _ = Describe("VpnSeedServer", func() {
 				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
 				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &networkingv1beta1.DestinationRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}).Return(fakeErr),
-			)
-
-			Expect(vpnSeedServer.Destroy(ctx)).To(MatchError(fakeErr))
-		})
-
-		It("should fail because the virtualService cannot be deleted", func() {
-			gomock.InOrder(
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-tlsauth"}}),
-				c.EXPECT().Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-dh"}}),
-				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
-				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.DestinationRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.VirtualService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}).Return(fakeErr),
 			)
 
 			Expect(vpnSeedServer.Destroy(ctx)).To(MatchError(fakeErr))
@@ -1239,9 +905,7 @@ var _ = Describe("VpnSeedServer", func() {
 				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
 				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &networkingv1beta1.DestinationRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.VirtualService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: ServiceName}}).Return(fakeErr),
 			)
 
@@ -1256,9 +920,7 @@ var _ = Describe("VpnSeedServer", func() {
 				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
 				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &networkingv1beta1.DestinationRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.VirtualService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: ServiceName}}),
 				c.EXPECT().Delete(ctx, &autoscalingv1beta2.VerticalPodAutoscaler{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-vpa"}}).Return(fakeErr),
 			)
@@ -1274,12 +936,9 @@ var _ = Describe("VpnSeedServer", func() {
 				c.EXPECT().Delete(ctx, &networkingv1.NetworkPolicy{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "allow-to-vpn-seed-server"}}),
 				c.EXPECT().Delete(ctx, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-envoy-config"}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.Gateway{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &networkingv1beta1.DestinationRule{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
-				c.EXPECT().Delete(ctx, &networkingv1beta1.VirtualService{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName}}),
 				c.EXPECT().Delete(ctx, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: ServiceName}}),
 				c.EXPECT().Delete(ctx, &autoscalingv1beta2.VerticalPodAutoscaler{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: DeploymentName + "-vpa"}}),
-				c.EXPECT().Delete(ctx, &networkingv1alpha3.EnvoyFilter{ObjectMeta: metav1.ObjectMeta{Namespace: istioNamespace, Name: namespace + "-vpn"}}),
 			)
 			Expect(vpnSeedServer.Destroy(ctx)).To(Succeed())
 		})
