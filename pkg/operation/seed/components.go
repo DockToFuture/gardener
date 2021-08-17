@@ -26,6 +26,7 @@ import (
 	"github.com/gardener/gardener/pkg/operation/botanist/component"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/dependencywatchdog"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/etcd"
+	"github.com/gardener/gardener/pkg/operation/botanist/component/extauthzserver"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/gardenerkubescheduler"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/kubeapiserver"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/networkpolicies"
@@ -218,4 +219,24 @@ func defaultDependencyWatchdogs(
 		ValuesProbe: dependencywatchdog.ValuesProbe{ProbeDependantsList: dependencyWatchdogProbeConfigurations},
 	})
 	return
+}
+
+func defaultExternalAuthzServer(
+	sc kubernetes.Interface,
+	imageVector imagevector.ImageVector,
+) (
+	extAuthzServer component.DeployWaiter,
+	err error,
+) {
+	image, err := imageVector.FindImage(charts.ImageNameExtAuthzServer, imagevector.RuntimeVersion(sc.Version()), imagevector.TargetVersion(sc.Version()))
+	if err != nil {
+		return nil, err
+	}
+
+	return extauthzserver.New(
+		sc.Client(),
+		"garden",
+		image.String(),
+		1,
+	), nil
 }

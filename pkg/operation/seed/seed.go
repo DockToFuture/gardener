@@ -38,6 +38,7 @@ import (
 	"github.com/gardener/gardener/pkg/operation/botanist/component/clusteridentity"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/dependencywatchdog"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/etcd"
+	"github.com/gardener/gardener/pkg/operation/botanist/component/extauthzserver"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/extensions/dns"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/extensions/dnsrecord"
 	"github.com/gardener/gardener/pkg/operation/botanist/component/gardenerkubescheduler"
@@ -945,6 +946,10 @@ func runCreateSeedFlow(
 	if err != nil {
 		return err
 	}
+	extAuthzServer, err := defaultExternalAuthzServer(sc, imageVector)
+	if err != nil {
+		return err
+	}
 
 	var (
 		g = flow.NewGraph("Seed cluster creation")
@@ -1003,6 +1008,11 @@ func runCreateSeedFlow(
 			Fn:           dwdProbe.Deploy,
 			Dependencies: flow.NewTaskIDs(deployResourceManager),
 		})
+		_ = g.Add(flow.Task{
+			Name:         "Deploying external authz server",
+			Fn:           extAuthzServer.Deploy,
+			Dependencies: flow.NewTaskIDs(deployResourceManager),
+		})
 	)
 
 	if err := g.Compile().Run(flow.Opts{Logger: seedLogger}); err != nil {
@@ -1040,6 +1050,7 @@ func RunDeleteSeedFlow(ctx context.Context, sc, gc kubernetes.Interface, seed *S
 		clusterIdentity = clusteridentity.NewForSeed(sc.Client(), v1beta1constants.GardenNamespace, "")
 		dwdEndpoint     = dependencywatchdog.New(sc.Client(), v1beta1constants.GardenNamespace, dependencywatchdog.Values{Role: dependencywatchdog.RoleEndpoint})
 		dwdProbe        = dependencywatchdog.New(sc.Client(), v1beta1constants.GardenNamespace, dependencywatchdog.Values{Role: dependencywatchdog.RoleProbe})
+		extAuthzServer  = extauthzserver.New(sc.Client(), "garden", "", 1)
 	)
 	scheduler, err := gardenerkubescheduler.Bootstrap(sc.Client(), v1beta1constants.GardenNamespace, nil, kubernetesVersion)
 	if err != nil {
@@ -1091,6 +1102,10 @@ func RunDeleteSeedFlow(ctx context.Context, sc, gc kubernetes.Interface, seed *S
 			Name: "Destroy dependency-watchdog-probe",
 			Fn:   component.OpDestroyAndWait(dwdProbe).Destroy,
 		})
+		destroyExtAuthzServer = g.Add(flow.Task{
+			Name: "Destroy external authz server",
+			Fn:   component.OpDestroyAndWait(extAuthzServer).Destroy,
+		})
 		_ = g.Add(flow.Task{
 			Name: "Destroying gardener-resource-manager",
 			Fn:   resourceManager.Destroy,
@@ -1103,6 +1118,7 @@ func RunDeleteSeedFlow(ctx context.Context, sc, gc kubernetes.Interface, seed *S
 				destroyNetworkPolicies,
 				destroyDWDEndpoint,
 				destroyDWDProbe,
+				destroyExtAuthzServer,
 				noControllerInstallations,
 			),
 		})
