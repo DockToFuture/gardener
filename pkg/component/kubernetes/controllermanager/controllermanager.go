@@ -650,9 +650,12 @@ func (k *kubeControllerManager) computeCommand(port int32) []string {
 		if v := k.values.Config.NodeMonitorGracePeriod; v != nil {
 			nodeMonitorGracePeriod = *v
 		}
-		if k.values.Config.NodeCIDRMaskSize != nil {
-			command = append(command, fmt.Sprintf("--node-cidr-mask-size=%d", *k.values.Config.NodeCIDRMaskSize))
-		}
+		// if k.values.Config.NodeCIDRMaskSize != nil {
+		// 	command = append(command, fmt.Sprintf("--node-cidr-mask-size=%d", *k.values.Config.NodeCIDRMaskSize))
+		// }
+
+		command = append(command, fmt.Sprintf("--node-cidr-mask-size-ipv4=%d", 24))
+		command = append(command, fmt.Sprintf("--node-cidr-mask-size-ipv6=%d", 64))
 
 		command = append(command,
 			"--allocate-node-cidrs=true",
