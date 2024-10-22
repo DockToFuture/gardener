@@ -7,6 +7,7 @@ package botanist
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -64,12 +65,14 @@ func (b *Botanist) WaitForInfrastructure(ctx context.Context) error {
 
 	networkingStatus := &gardencorev1beta1.NetworkingStatus{}
 
-	if nodesCIDRs := b.Shoot.Components.Extensions.Infrastructure.NodesCIDRs(); len(nodesCIDRs) > 0 {
-		if err := b.Shoot.UpdateInfo(ctx, b.GardenClient, true, func(shoot *gardencorev1beta1.Shoot) error {
-			shoot.Spec.Networking.Nodes = &nodesCIDRs[0]
-			return nil
-		}); err != nil {
-			return err
+	if nodesCIDRs := b.Shoot.Components.Extensions.Infrastructure.NodesCIDRs(); len(nodesCIDRs) > 0 { // Here we probably want the ipv4 address in case of dualstack
+		if !slices.Contains(b.Shoot.GetInfo().Spec.Networking.IPFamilies, gardencorev1beta1.IPFamilyIPv4) {
+			if err := b.Shoot.UpdateInfo(ctx, b.GardenClient, true, func(shoot *gardencorev1beta1.Shoot) error {
+				shoot.Spec.Networking.Nodes = &nodesCIDRs[0]
+				return nil
+			}); err != nil {
+				return err
+			}
 		}
 
 		networkingStatus.Nodes = nodesCIDRs
