@@ -590,5 +590,9 @@ func (n *nodeLocalDNS) getAddress(useIPv6Brackets bool) string {
 		}
 		return nodelocaldnsconstants.IPVSIPv6Address
 	}
+	if ipFamiliesSet.Has(gardencorev1beta1.IPFamilyIPv6) && ipFamiliesSet.Has(gardencorev1beta1.IPFamilyIPv4) {
+		return nodelocaldnsconstants.IPVSAddress // + "," + nodelocaldnsconstants.IPVSIPv6Address
+	}
+
 	return ""
 }
